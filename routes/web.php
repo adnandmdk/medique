@@ -72,6 +72,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('queues.start');
         Route::patch('/queues/{queue}/finish', [DoctorQueueController::class, 'finish'])
             ->name('queues.finish');
+            // Di dalam group doctor:
+        Route::patch('/attendance/toggle', [\App\Http\Controllers\Doctor\AttendanceController::class, 'toggle'])
+    ->name('attendance.toggle');
     });
 
     // ══ PATIENT ══
