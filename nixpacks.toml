@@ -1,0 +1,14 @@
+[phases.setup]
+nixPkgs = ["php", "composer", "nodejs"]
+
+[phases.build]
+cmds = [
+  "composer install --no-dev --optimize-autoloader",
+  "npm install",
+  "npm run build",
+  "cp .env.example .env",
+  "php artisan key:generate"
+]
+
+[start]
+cmd = "php -S 0.0.0.0:$PORT -t public"
