@@ -11,6 +11,7 @@ class Queue extends Model
     use HasFactory;
 
     protected $fillable = [
+        'hospital_id',
         'patient_id',
         'schedule_id',
         'queue_number',
@@ -21,12 +22,9 @@ class Queue extends Model
 
     protected function casts(): array
     {
-        return [
-            'booking_date' => 'date',
-        ];
+        return ['booking_date' => 'date'];
     }
 
-    // Status labels
     public const STATUS_LABELS = [
         'waiting'     => 'Menunggu',
         'called'      => 'Dipanggil',
@@ -35,43 +33,27 @@ class Queue extends Model
         'cancelled'   => 'Dibatalkan',
     ];
 
-    // Status colors untuk badge
     public const STATUS_COLORS = [
-        'waiting'     => 'bg-yellow-100 text-yellow-700',
-        'called'      => 'bg-blue-100 text-blue-700',
-        'in_progress' => 'bg-purple-100 text-purple-700',
-        'done'        => 'bg-green-100 text-green-700',
-        'cancelled'   => 'bg-red-100 text-red-700',
+        'waiting'     => 'badge-waiting',
+        'called'      => 'badge-called',
+        'in_progress' => 'badge-progress',
+        'done'        => 'badge-done',
+        'cancelled'   => 'badge-cancelled',
     ];
 
-    // Relasi ke User (patient)
-    public function patient()
-    {
-        return $this->belongsTo(User::class, 'patient_id');
-    }
+    public function hospital()   { return $this->belongsTo(Hospital::class); }
+    public function patient()    { return $this->belongsTo(User::class, 'patient_id'); }
+    public function schedule()   { return $this->belongsTo(Schedule::class); }
+    public function logs()       { return $this->hasMany(QueueLog::class); }
 
-    // Relasi ke Schedule
-    public function schedule()
-    {
-        return $this->belongsTo(Schedule::class);
-    }
-
-    // Relasi ke QueueLog
-    public function logs()
-    {
-        return $this->hasMany(QueueLog::class);
-    }
-
-    // Accessor: label status
     public function getStatusLabelAttribute(): string
     {
         return self::STATUS_LABELS[$this->status] ?? $this->status;
     }
 
-    // Accessor: warna badge status
     public function getStatusColorAttribute(): string
     {
-        return self::STATUS_COLORS[$this->status] ?? 'bg-gray-100 text-gray-700';
+        return self::STATUS_COLORS[$this->status] ?? 'badge-inactive';
     }
 
     // Generate token unik
@@ -80,18 +62,28 @@ class Queue extends Model
         do {
             $token = strtoupper(Str::random(8));
         } while (self::where('token', $token)->exists());
-
         return $token;
     }
 
-    // Generate nomor antrian berikutnya
-    public static function generateQueueNumber(int $scheduleId, string $bookingDate): int
+    /**
+     * Generate nomor antrian format: PU-0001
+     * Reset per poli per hari
+     */
+    public static function generateQueueNumber(int $scheduleId, string $bookingDate): string
     {
-        $last = self::where('schedule_id', $scheduleId)
-            ->where('booking_date', $bookingDate)
-            ->whereNotIn('status', ['cancelled'])
-            ->max('queue_number');
+        $schedule = Schedule::with('doctor.clinic')->find($scheduleId);
+        $clinic   = optional(optional($schedule)->doctor)->clinic;
+        $poliCode = $clinic ? $clinic->code : 'XX';
 
-        return ($last ?? 0) + 1;
+        // Hitung antrian hari ini untuk poli ini
+        $last = self::whereHas('schedule.doctor', fn($q) =>
+                    $q->where('clinic_id', optional($clinic)->id)
+                )
+                ->where('booking_date', $bookingDate)
+                ->whereNotIn('status', ['cancelled'])
+                ->count();
+
+        $number = str_pad($last + 1, 4, '0', STR_PAD_LEFT);
+        return "{$poliCode}-{$number}";
     }
 }

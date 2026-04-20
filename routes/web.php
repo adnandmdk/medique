@@ -11,6 +11,9 @@ use App\Http\Controllers\Doctor\QueueController as DoctorQueueController;
 use App\Http\Controllers\Patient\QueueController as PatientQueueController;
 use App\Http\Controllers\Auth\PatientRegisterController;
 use App\Http\Controllers\QueueDisplayController;
+use App\Http\Controllers\HospitalController;
+use App\Http\Controllers\ProfileController;
+
 
 // ── ROOT ──
 Route::get('/', function () {
@@ -90,6 +93,31 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('/queues/{queue}/cancel', [PatientQueueController::class, 'cancel'])
             ->name('queues.cancel');
     });
+    Route::get('/select-hospital', [HospitalController::class, 'select'])
+    ->name('hospital.select');
+    Route::post('/hospital/choose', [HospitalController::class, 'choose'])
+    ->name('hospital.choose');
+
+Route::middleware('auth')->group(function () {
+
+    // 📄 TAMPILKAN PROFILE
+    Route::get('/profile', [ProfileController::class, 'show'])
+        ->name('profile.show');
+
+    // ✏️ EDIT PROFILE
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])
+        ->name('profile.edit');
+
+    // 💾 UPDATE
+    Route::patch('/profile', [ProfileController::class, 'update'])
+        ->name('profile.update');
+
+    // 🗑️ DELETE ACCOUNT
+    Route::delete('/profile', [ProfileController::class, 'destroy'])
+        ->name('profile.destroy');
+
+});
+   
 });
 
 require __DIR__.'/auth.php';

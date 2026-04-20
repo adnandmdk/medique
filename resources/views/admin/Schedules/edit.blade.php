@@ -6,7 +6,7 @@
         <div class="form-section">
             <div class="form-section-title">Edit Jadwal Praktek</div>
             <form action="{{ route('admin.schedules.update', $schedule) }}" method="POST">
-                @csrf @method('PUT')
+                @csrf @method('PATCH')
                 <div class="form-group">
                     <label class="form-label">Dokter <span class="req">*</span></label>
                     <select name="doctor_id" class="form-control {{ $errors->has('doctor_id') ? 'is-error' : '' }}">

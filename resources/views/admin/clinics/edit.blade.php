@@ -7,7 +7,7 @@
             <div class="form-section-title">Edit Poliklinik</div>
             <div class="form-section-sub">Perbarui data <strong>{{ $clinic->name }}</strong></div>
             <form action="{{ route('admin.clinics.update', $clinic) }}" method="POST">
-                @csrf @method('PUT')
+                @csrf @method('PATCH')
                 <div class="form-group">
                     <label class="form-label">Nama Poliklinik <span class="req">*</span></label>
                     <input type="text" name="name" value="{{ old('name', $clinic->name) }}"

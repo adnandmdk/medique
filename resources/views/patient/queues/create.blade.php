@@ -4,74 +4,84 @@
 
     <div class="form-wrap">
         <div class="form-section">
-            <div class="form-section-title">Pilih Dokter</div>
-            <div class="form-section-sub">Pilih dokter yang ingin Anda kunjungi</div>
+            <div class="form-section-title">Pilih Jadwal Dokter</div>
+            <div class="form-section-sub">Pilih slot jadwal yang tersedia</div>
 
-            <form action="{{ route('patient.queues.store') }}" method="POST" id="bookingForm">
+            <form action="{{ route('patient.queues.store') }}" method="POST">
                 @csrf
 
-                {{-- Step 1: Pilih Dokter --}}
+                {{-- Schedule Selection --}}
                 <div class="form-group">
-                    <label class="form-label">Dokter <span class="req">*</span></label>
-                    <select name="doctor_id"
-                            id="doctorSelect"
-                            class="form-control {{ $errors->has('doctor_id') ? 'is-error' : '' }}"
-                            onchange="loadSchedules(this.value)">
-                        <option value="">-- Pilih Dokter --</option>
-                        @foreach($doctors as $doctor)
-                            <option value="{{ $doctor->id }}"
-                                    data-name="{{ optional($doctor->user)->name }}"
-                                    data-spec="{{ $doctor->specialization }}"
-                                    data-clinic="{{ optional($doctor->clinic)->name }}"
-                                    {{ old('doctor_id') == $doctor->id ? 'selected' : '' }}>
-                                {{ optional($doctor->user)->name ?? '—' }} —
-                                {{ $doctor->specialization }} ({{ optional($doctor->clinic)->name ?? '—' }})
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('doctor_id')<div class="form-error">{{ $message }}</div>@enderror
-                </div>
+                    <label class="form-label">Jadwal Tersedia <span class="req">*</span></label>
+                    <input type="hidden" name="schedule_id" id="selectedScheduleId" value="{{ old('schedule_id') }}">
+                    @error('schedule_id')<div class="form-error">{{ $message }}</div>@enderror
 
-                {{-- Doctor Info Card --}}
-                <div id="doctorInfo" style="display:none;margin-bottom:16px;background:var(--brand-light);border:1px solid rgba(15,110,86,0.15);border-radius:10px;padding:14px;">
-                    <div style="display:flex;gap:12px;align-items:center;">
-                        <div id="docAvatar" style="width:44px;height:44px;border-radius:11px;background:var(--brand);color:white;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0;"></div>
-                        <div>
-                            <div id="docName" style="font-size:14px;font-weight:800;color:var(--brand);"></div>
-                            <div id="docSpec" style="font-size:12px;color:var(--text2);"></div>
-                            <div id="docClinic" style="font-size:12px;color:var(--text2);margin-top:2px;"></div>
+                    @if($schedules->isEmpty())
+                        <div style="padding:20px;border:1px solid var(--border);border-radius:9px;text-align:center;color:var(--text3);">
+                            Tidak ada jadwal tersedia saat ini.
                         </div>
-                    </div>
+                    @else
+                        {{-- Group by clinic --}}
+                        @foreach($schedules as $doctorId => $doctorScheds)
+                            @php
+                                $firstSched = $doctorScheds->first();
+                                $doctor     = optional($firstSched->doctor);
+                                $user       = optional($doctor->user);
+                                $clinic     = optional($doctor->clinic);
+                                $dayMap     = ['monday'=>'Senin','tuesday'=>'Selasa','wednesday'=>'Rabu','thursday'=>'Kamis','friday'=>'Jumat','saturday'=>'Sabtu','sunday'=>'Minggu'];
+                                $dayColors  = ['monday'=>'#D1FAE5:#065F46','tuesday'=>'#DBEAFE:#1E40AF','wednesday'=>'#EDE9FE:#5B21B6','thursday'=>'#FEF3C7:#92400E','friday'=>'#E1F5EE:#0F6E56','saturday'=>'#FEE2E2:#991B1B','sunday'=>'#F0F0F0:#6B7280'];
+                            @endphp
+                            <div style="border:1.5px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden;">
+                                {{-- Doctor Header --}}
+                                <div style="padding:12px 16px;background:var(--surface2);display:flex;align-items:center;gap:12px;">
+                                    <div style="width:36px;height:36px;border-radius:9px;background:var(--brand-light);color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;">
+                                        {{ strtoupper(substr($user->name??'NA',0,2)) }}
+                                    </div>
+                                    <div>
+                                        <div style="font-size:13px;font-weight:700;color:var(--text);">{{ $user->name ?? '—' }}</div>
+                                        <div style="font-size:11px;color:var(--text2);">{{ $doctor->specialization ?? '—' }} · {{ $clinic->name ?? '—' }}</div>
+                                    </div>
+                                </div>
+
+                                {{-- Schedule Slots --}}
+                                @foreach($doctorScheds as $sched)
+                                    @php [$bg,$fg] = explode(':', $dayColors[$sched->day_of_week] ?? '#F0F0F0:#6B7280'); @endphp
+                                    <div class="sched-slot {{ old('schedule_id') == $sched->id ? 'selected' : '' }}"
+                                         id="slot-{{ $sched->id }}"
+                                         onclick="selectSlot('{{ $sched->id }}', this)"
+                                         style="padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:12px;cursor:pointer;transition:all 0.15s;">
+                                        <span style="padding:4px 10px;border-radius:7px;font-size:11px;font-weight:700;background:{{ $bg }};color:{{ $fg }};min-width:56px;text-align:center;">
+                                            {{ $dayMap[$sched->day_of_week] ?? $sched->day_of_week }}
+                                        </span>
+                                        <div style="flex:1;">
+                                            <span style="font-size:13px;font-weight:700;color:var(--text);">{{ substr($sched->start_time,0,5) }} — {{ substr($sched->end_time,0,5) }}</span>
+                                        </div>
+                                        <div class="slot-check" style="width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s;">
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endforeach
+                    @endif
                 </div>
 
-                {{-- Step 2: Jadwal (auto load) --}}
-                <div id="scheduleSection" style="display:none;">
-                    <div class="form-group">
-                        <label class="form-label">Jadwal Tersedia <span class="req">*</span></label>
-                        <input type="hidden" name="schedule_id" id="scheduleIdInput" value="{{ old('schedule_id') }}">
-                        <div id="scheduleList" style="display:grid;gap:8px;"></div>
-                        @error('schedule_id')<div class="form-error">{{ $message }}</div>@enderror
-                    </div>
+                {{-- Tanggal --}}
+                <div class="form-group" id="dateSection" style="{{ old('schedule_id') ? '' : 'display:none;' }}">
+                    <label class="form-label">Tanggal Kunjungan <span class="req">*</span></label>
+                    <input type="date"
+                           name="booking_date"
+                           id="bookingDate"
+                           value="{{ old('booking_date', today()->format('Y-m-d')) }}"
+                           min="{{ today()->format('Y-m-d') }}"
+                           class="form-control {{ $errors->has('booking_date') ? 'is-error' : '' }}">
+                    @error('booking_date')<div class="form-error">{{ $message }}</div>@enderror
                 </div>
 
-                {{-- Step 3: Tanggal --}}
-                <div id="dateSection" style="display:none;">
-                    <div class="form-group">
-                        <label class="form-label">Tanggal Kunjungan <span class="req">*</span></label>
-                        <input type="date"
-                               name="booking_date"
-                               id="bookingDate"
-                               value="{{ old('booking_date', today()->format('Y-m-d')) }}"
-                               min="{{ today()->format('Y-m-d') }}"
-                               class="form-control {{ $errors->has('booking_date') ? 'is-error' : '' }}">
-                        @error('booking_date')<div class="form-error">{{ $message }}</div>@enderror
-                    </div>
-
-                    <div class="alert alert-brand">
+                <div id="submitSection" style="{{ old('schedule_id') ? '' : 'display:none;' }}">
+                    <div class="alert alert-brand" style="margin-bottom:16px;">
                         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>
-                        <span>Nomor antrian otomatis digenerate. Token antrian akan diberikan setelah booking berhasil.</span>
+                        <span>Nomor antrian otomatis digenerate dengan format <strong>KODE-NOMOR</strong> (contoh: PU-0001).</span>
                     </div>
-
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">
                             <svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg>
@@ -85,86 +95,19 @@
         </div>
     </div>
 
+    <style>
+        .sched-slot:hover { background: var(--surface2); }
+        .sched-slot.selected { background: var(--brand-light); }
+        .sched-slot.selected .slot-check { background: var(--brand); border-color: var(--brand); }
+        .sched-slot.selected .slot-check::after { content: '✓'; font-size: 11px; color: white; font-weight: 800; }
+    </style>
     <script>
-    const scheduleData = @json($doctorSchedules ?? []);
-    const dayMap = {
-        monday:'Senin', tuesday:'Selasa', wednesday:'Rabu',
-        thursday:'Kamis', friday:'Jumat', saturday:'Sabtu', sunday:'Minggu'
-    };
-
-    function loadSchedules(doctorId) {
-        const infoDiv   = document.getElementById('doctorInfo');
-        const schedSec  = document.getElementById('scheduleSection');
-        const dateSec   = document.getElementById('dateSection');
-        const schedList = document.getElementById('scheduleList');
-
-        if (!doctorId) {
-            infoDiv.style.display  = 'none';
-            schedSec.style.display = 'none';
-            dateSec.style.display  = 'none';
-            return;
-        }
-
-        // Doctor info
-        const sel = document.getElementById('doctorSelect');
-        const opt = sel.options[sel.selectedIndex];
-        const name   = opt.dataset.name || '';
-        const spec   = opt.dataset.spec || '';
-        const clinic = opt.dataset.clinic || '';
-
-        document.getElementById('docName').textContent   = name;
-        document.getElementById('docSpec').textContent   = spec + ' · ' + clinic;
-        document.getElementById('docClinic').textContent = 'Ruangan: ' + clinic;
-        document.getElementById('docAvatar').textContent = name.substring(0,2).toUpperCase();
-        infoDiv.style.display = 'block';
-
-        // Schedules
-        const scheds = scheduleData[doctorId] || [];
-        if (scheds.length === 0) {
-            schedSec.style.display = 'none';
-            dateSec.style.display  = 'none';
-            return;
-        }
-
-        schedList.innerHTML = '';
-        scheds.forEach(s => {
-            const div = document.createElement('div');
-            div.style.cssText = 'padding:12px 14px;border:2px solid var(--border);border-radius:9px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all 0.15s;';
-            div.innerHTML = `
-                <div style="width:8px;height:8px;border-radius:50%;background:var(--brand);flex-shrink:0;"></div>
-                <div style="flex:1;">
-                    <div style="font-size:13px;font-weight:700;">${dayMap[s.day_of_week] || s.day_of_week}</div>
-                    <div style="font-size:12px;color:var(--text2);">${s.start_time.substring(0,5)} — ${s.end_time.substring(0,5)}</div>
-                </div>
-                <div style="font-size:11px;color:var(--brand);font-weight:700;">Pilih →</div>
-            `;
-            div.onclick = () => selectSchedule(div, s.id);
-            div.dataset.schedId = s.id;
-            schedList.appendChild(div);
-        });
-
-        schedSec.style.display = 'block';
-        dateSec.style.display  = 'none';
-        document.getElementById('scheduleIdInput').value = '';
-    }
-
-    function selectSchedule(el, schedId) {
-        // Reset all
-        document.querySelectorAll('#scheduleList > div').forEach(d => {
-            d.style.borderColor = 'var(--border)';
-            d.style.background  = 'var(--surface)';
-        });
-        // Highlight selected
-        el.style.borderColor = 'var(--brand)';
-        el.style.background  = 'var(--brand-light)';
-        document.getElementById('scheduleIdInput').value = schedId;
+    function selectSlot(id, el) {
+        document.querySelectorAll('.sched-slot').forEach(s => s.classList.remove('selected'));
+        el.classList.add('selected');
+        document.getElementById('selectedScheduleId').value = id;
         document.getElementById('dateSection').style.display = 'block';
+        document.getElementById('submitSection').style.display = 'block';
     }
-
-    // Restore old value on error
-    document.addEventListener('DOMContentLoaded', function() {
-        const oldDoctor = '{{ old("doctor_id") }}';
-        if (oldDoctor) loadSchedules(oldDoctor);
-    });
     </script>
 </x-app-layout>

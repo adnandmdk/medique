@@ -17,14 +17,35 @@ class QueueController extends Controller
 
     public function index(Request $request): View
     {
-        $doctor = $request->user()->doctor;
+        $user = $request->user();
+
+        // 🔴 VALIDASI USER LOGIN
+        if (!$user) {
+            abort(403, 'Unauthorized');
+        }
+
+        // 🔴 VALIDASI ROLE DOCTOR (kalau pakai Spatie)
+        if (!$user->hasRole('doctor')) {
+            abort(403, 'Akun belum terdaftar sebagai dokter. Hubungi Admin.');
+        }
+
+        // 🔴 AMBIL DATA DOCTOR
+        $doctor = $user->doctor;
+
+        if (!$doctor) {
+            abort(403, 'Data dokter belum dibuat. Hubungi Admin.');
+        }
+
+        // 🔵 AMAN DIPAKAI
         $queues = $this->queueService->getTodayByDoctor($doctor->id);
+
         return view('doctor.queues.index', compact('queues'));
     }
 
     public function call(Queue $queue): RedirectResponse
     {
         $this->queueService->call($queue);
+
         return redirect()->route('doctor.queues.index')
             ->with('success', "Antrian #{$queue->queue_number} dipanggil.");
     }
@@ -32,6 +53,7 @@ class QueueController extends Controller
     public function start(Queue $queue): RedirectResponse
     {
         $this->queueService->start($queue);
+
         return redirect()->route('doctor.queues.index')
             ->with('success', "Antrian #{$queue->queue_number} sedang dilayani.");
     }
@@ -39,6 +61,7 @@ class QueueController extends Controller
     public function finish(Queue $queue): RedirectResponse
     {
         $this->queueService->finish($queue);
+
         return redirect()->route('doctor.queues.index')
             ->with('success', "Antrian #{$queue->queue_number} selesai.");
     }

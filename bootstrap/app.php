@@ -12,14 +12,17 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-
-        // Sanctum untuk API
         $middleware->statefulApi();
 
         $middleware->alias([
-            'role'       => \Spatie\Permission\Middleware\RoleMiddleware::class,
-            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
-            'role.check' => \App\Http\Middleware\RoleMiddleware::class,
+            'role'             => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission'       => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'hospital.context' => \App\Http\Middleware\HospitalContext::class,
+        ]);
+
+        // Terapkan ke semua web routes
+        $middleware->web(append: [
+            \App\Http\Middleware\HospitalContext::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

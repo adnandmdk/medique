@@ -10,16 +10,22 @@ class Clinic extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name',
-        'location',
-        'is_active',
+        'hospital_id', 'name', 'code', 'location', 'is_active',
     ];
 
     protected function casts(): array
     {
-        return [
-            'is_active' => 'boolean',
-        ];
+        return ['is_active' => 'boolean'];
+    }
+
+    public function hospital()
+    {
+        return $this->belongsTo(Hospital::class);
+    }
+
+    public function doctors()
+    {
+        return $this->hasMany(Doctor::class);
     }
 
     public function scopeActive($query)
@@ -27,8 +33,14 @@ class Clinic extends Model
         return $query->where('is_active', true);
     }
 
-    public function doctors()
+    // Auto-generate kode poli dari nama jika tidak diisi
+    public function getCodeAttribute($value): string
     {
-        return $this->hasMany(Doctor::class);
+        if ($value) return strtoupper($value);
+
+        // Auto: ambil huruf kapital dari nama
+        preg_match_all('/[A-Z]/', $this->name, $matches);
+        $code = implode('', array_slice($matches[0], 0, 3));
+        return $code ?: strtoupper(substr($this->name, 0, 2));
     }
 }

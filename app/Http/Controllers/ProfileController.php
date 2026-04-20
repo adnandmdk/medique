@@ -2,59 +2,77 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ProfileUpdateRequest;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 
 class ProfileController extends Controller
 {
     /**
-     * Display the user's profile form.
+     * 📄 TAMPILKAN PROFILE (READ ONLY / DASHBOARD STYLE)
+     */
+    public function show(Request $request): View
+    {
+        $user = $request->user()->load(['hospital']);
+
+        $queues = \App\Models\Queue::with([
+                'schedule.doctor.user',
+                'schedule.doctor.clinic'
+            ])
+            ->where('patient_id', $user->id)
+            ->latest()
+            ->take(5)
+            ->get();
+
+        return view('profile.show', compact('user', 'queues'));
+    }
+
+    /**
+     * ✏️ HALAMAN EDIT PROFILE
      */
     public function edit(Request $request): View
     {
-        return view('profile.edit', [
-            'user' => $request->user(),
-        ]);
-    }
-
-    /**
-     * Update the user's profile information.
-     */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
-    {
-        $request->user()->fill($request->validated());
-
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
-
-        $request->user()->save();
-
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
-    }
-
-    /**
-     * Delete the user's account.
-     */
-    public function destroy(Request $request): RedirectResponse
-    {
-        $request->validateWithBag('userDeletion', [
-            'password' => ['required', 'current_password'],
-        ]);
-
         $user = $request->user();
 
-        Auth::logout();
-
-        $user->delete();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return Redirect::to('/');
+        return view('profile.edit', compact('user'));
     }
+
+    /**
+     * 💾 UPDATE PROFILE
+     */
+    public function update(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        $rules = [
+            'name'  => ['required', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:20'],
+        ];
+
+        // 🔵 VALIDASI KHUSUS PASIEN
+        if ($user->isPatient()) {
+            $rules['nik']           = ['nullable', 'string', 'max:20'];
+            $rules['date_of_birth'] = ['nullable', 'date', 'before:today'];
+            $rules['gender']        = ['nullable', 'in:male,female'];
+            $rules['address']       = ['nullable', 'string', 'max:500'];
+        }
+
+        $validated = $request->validate($rules);
+
+        $user->update($validated);
+
+        return redirect()->route('profile.show')
+            ->with('success', 'Profil berhasil diperbarui.');
+    }
+    public function destroy(Request $request)
+{
+    $user = $request->user();
+
+    Auth::logout();
+
+    $user->delete();
+
+    return redirect('/')->with('success', 'Akun berhasil dihapus.');
+}
 }

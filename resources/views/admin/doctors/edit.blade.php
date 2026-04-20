@@ -7,7 +7,7 @@
             <div class="form-section-title">Edit Data Dokter</div>
             <div class="form-section-sub">Perbarui profil <strong>{{ optional($doctor->user)->name ?? '—' }}</strong></div>
             <form action="{{ route('admin.doctors.update', $doctor) }}" method="POST">
-                @csrf @method('PUT')
+                @csrf @method('PATCH')
                 <div class="form-group">
                     <label class="form-label">Akun User <span class="req">*</span></label>
                     <select name="user_id" class="form-control {{ $errors->has('user_id') ? 'is-error' : '' }}">
