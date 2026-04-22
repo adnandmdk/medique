@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,26 +9,17 @@ class Doctor extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
-        'clinic_id',
-        'specialization',
-        'licence_number',
+        'hospital_id','user_id','clinic_id',
+        'specialization','licence_number',
     ];
 
-    // Relasi ke User
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+    public function hospital()  { return $this->belongsTo(Hospital::class); }
+    public function user()      { return $this->belongsTo(User::class); }
+    public function clinic()    { return $this->belongsTo(Clinic::class); }
+    public function schedules() { return $this->hasMany(Schedule::class); }
 
-    // Relasi ke Clinic
-    public function clinic()
+    public function scopeForHospital($query, int $hospitalId)
     {
-        return $this->belongsTo(Clinic::class);
-    }
-
-    public function schedules()
-    {
-        return $this->hasMany(Schedule::class);
+        return $query->where('hospital_id', $hospitalId);
     }
 }

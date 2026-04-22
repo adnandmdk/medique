@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,8 +9,8 @@ class Hospital extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'address', 'phone', 'email',
-        'logo', 'tagline', 'is_active',
+        'name','code','address','phone',
+        'email','logo','tagline','is_active',
     ];
 
     protected function casts(): array
@@ -26,7 +25,7 @@ class Hospital extends Model
 
     public function doctors()
     {
-        return $this->hasManyThrough(Doctor::class, Clinic::class);
+        return $this->hasMany(Doctor::class);
     }
 
     public function queues()
@@ -39,9 +38,14 @@ class Hospital extends Model
         return $this->hasMany(User::class);
     }
 
-    // Inisial untuk avatar
+    public function activeClinics()
+    {
+        return $this->hasMany(Clinic::class)->where('is_active', true);
+    }
+
     public function getInitialsAttribute(): string
     {
-        return strtoupper(substr($this->name, 0, 2));
+        $words = explode(' ', $this->name);
+        return strtoupper(collect($words)->take(2)->map(fn($w) => $w[0])->join(''));
     }
 }

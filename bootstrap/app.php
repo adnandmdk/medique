@@ -1,5 +1,4 @@
 <?php
-
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -15,16 +14,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->statefulApi();
 
         $middleware->alias([
-            'role'             => \Spatie\Permission\Middleware\RoleMiddleware::class,
-            'permission'       => \Spatie\Permission\Middleware\PermissionMiddleware::class,
-            'hospital.context' => \App\Http\Middleware\HospitalContext::class,
+            'role'           => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission'     => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'hospital.scope' => \App\Http\Middleware\ValidateHospitalScope::class,
         ]);
 
-        // Terapkan ke semua web routes
         $middleware->web(append: [
-            \App\Http\Middleware\HospitalContext::class,
+            \App\Http\Middleware\EnsureHospitalAccess::class,
         ]);
     })
-    ->withExceptions(function (Exceptions $exceptions) {
-        //
-    })->create();
+    ->withExceptions(function (Exceptions $exceptions) {})
+    ->create();

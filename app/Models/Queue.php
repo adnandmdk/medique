@@ -1,9 +1,9 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class Queue extends Model
@@ -11,13 +11,8 @@ class Queue extends Model
     use HasFactory;
 
     protected $fillable = [
-        'hospital_id',
-        'patient_id',
-        'schedule_id',
-        'queue_number',
-        'booking_date',
-        'status',
-        'token',
+        'hospital_id','patient_id','schedule_id',
+        'queue_number','booking_date','status','token',
     ];
 
     protected function casts(): array
@@ -41,10 +36,10 @@ class Queue extends Model
         'cancelled'   => 'badge-cancelled',
     ];
 
-    public function hospital()   { return $this->belongsTo(Hospital::class); }
-    public function patient()    { return $this->belongsTo(User::class, 'patient_id'); }
-    public function schedule()   { return $this->belongsTo(Schedule::class); }
-    public function logs()       { return $this->hasMany(QueueLog::class); }
+    public function hospital() { return $this->belongsTo(Hospital::class); }
+    public function patient()  { return $this->belongsTo(User::class, 'patient_id'); }
+    public function schedule() { return $this->belongsTo(Schedule::class); }
+    public function logs()     { return $this->hasMany(QueueLog::class); }
 
     public function getStatusLabelAttribute(): string
     {
@@ -56,7 +51,6 @@ class Queue extends Model
         return self::STATUS_COLORS[$this->status] ?? 'badge-inactive';
     }
 
-    // Generate token unik
     public static function generateToken(): string
     {
         do {
@@ -67,23 +61,36 @@ class Queue extends Model
 
     /**
      * Generate nomor antrian format: PU-0001
-     * Reset per poli per hari
+     * Gunakan DB transaction + atomic untuk avoid race condition
      */
     public static function generateQueueNumber(int $scheduleId, string $bookingDate): string
     {
-        $schedule = Schedule::with('doctor.clinic')->find($scheduleId);
-        $clinic   = optional(optional($schedule)->doctor)->clinic;
-        $poliCode = $clinic ? $clinic->code : 'XX';
+        $schedule = Schedule::with('doctor.clinic')->findOrFail($scheduleId);
+        $clinic   = optional(optional($schedule->doctor)->clinic);
+        $poliCode = $clinic->poli_code ?? 'XX';
 
-        // Hitung antrian hari ini untuk poli ini
-        $last = self::whereHas('schedule.doctor', fn($q) =>
-                    $q->where('clinic_id', optional($clinic)->id)
-                )
-                ->where('booking_date', $bookingDate)
-                ->whereNotIn('status', ['cancelled'])
-                ->count();
+        // Atomic: gunakan DB transaction untuk menghindari race condition
+        return DB::transaction(function () use ($scheduleId, $bookingDate, $poliCode, $clinic) {
+            // Lock row untuk counting
+            $count = self::whereHas('schedule.doctor', fn($q) =>
+                        $q->where('clinic_id', $clinic->id ?? 0)
+                    )
+                    ->where('booking_date', $bookingDate)
+                    ->whereNotIn('status', ['cancelled'])
+                    ->lockForUpdate()
+                    ->count();
 
-        $number = str_pad($last + 1, 4, '0', STR_PAD_LEFT);
-        return "{$poliCode}-{$number}";
+            return $poliCode . '-' . str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+        });
+    }
+
+    public function scopeForHospital($query, int $hospitalId)
+    {
+        return $query->where('hospital_id', $hospitalId);
+    }
+
+    public function scopeToday($query)
+    {
+        return $query->where('booking_date', today());
     }
 }

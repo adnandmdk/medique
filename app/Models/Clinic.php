@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,7 +9,7 @@ class Clinic extends Model
     use HasFactory;
 
     protected $fillable = [
-        'hospital_id', 'name', 'code', 'location', 'is_active',
+        'hospital_id','name','code','location','is_active',
     ];
 
     protected function casts(): array
@@ -18,29 +17,23 @@ class Clinic extends Model
         return ['is_active' => 'boolean'];
     }
 
-    public function hospital()
+    public function hospital() { return $this->belongsTo(Hospital::class); }
+    public function doctors()  { return $this->hasMany(Doctor::class); }
+
+    public function scopeActive($q) { return $q->where('is_active', true); }
+
+    public function scopeForHospital($query, int $hospitalId)
     {
-        return $this->belongsTo(Hospital::class);
+        return $query->where('hospital_id', $hospitalId);
     }
 
-    public function doctors()
+    // Auto generate kode dari nama
+    public function getPoliCodeAttribute(): string
     {
-        return $this->hasMany(Doctor::class);
-    }
-
-    public function scopeActive($query)
-    {
-        return $query->where('is_active', true);
-    }
-
-    // Auto-generate kode poli dari nama jika tidak diisi
-    public function getCodeAttribute($value): string
-    {
-        if ($value) return strtoupper($value);
-
-        // Auto: ambil huruf kapital dari nama
-        preg_match_all('/[A-Z]/', $this->name, $matches);
-        $code = implode('', array_slice($matches[0], 0, 3));
-        return $code ?: strtoupper(substr($this->name, 0, 2));
+        if ($this->code) return strtoupper($this->code);
+        // Ambil huruf awal setiap kata
+        $words = explode(' ', $this->name);
+        $code  = collect($words)->map(fn($w) => strtoupper($w[0]))->join('');
+        return substr($code, 0, 4);
     }
 }

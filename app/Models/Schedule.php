@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,13 +9,9 @@ class Schedule extends Model
     use HasFactory;
 
     protected $fillable = [
-        'doctor_id',
-        'day_of_week',
-        'start_time',
-        'end_time',
+        'doctor_id','day_of_week','start_time','end_time',
     ];
 
-    // Map hari ke bahasa Indonesia
     public const DAY_LABELS = [
         'monday'    => 'Senin',
         'tuesday'   => 'Selasa',
@@ -27,22 +22,13 @@ class Schedule extends Model
         'sunday'    => 'Minggu',
     ];
 
-    // Relasi ke Doctor
-    public function doctor()
-    {
-        return $this->belongsTo(Doctor::class);
-    }
-    public function clinic()
-    {
-    return $this->belongsTo(\App\Models\Clinic::class);
-    }
-    // Accessor: label hari dalam bahasa Indonesia
+    public function doctor() { return $this->belongsTo(Doctor::class); }
+
     public function getDayLabelAttribute(): string
     {
         return self::DAY_LABELS[$this->day_of_week] ?? $this->day_of_week;
     }
 
-    // Accessor: format jam HH:MM
     public function getStartTimeLabelAttribute(): string
     {
         return substr($this->start_time, 0, 5);
@@ -51,5 +37,19 @@ class Schedule extends Model
     public function getEndTimeLabelAttribute(): string
     {
         return substr($this->end_time, 0, 5);
+    }
+
+    // Scope: jadwal tersedia untuk hospital tertentu
+    public function scopeForHospital($query, int $hospitalId)
+    {
+        return $query->whereHas('doctor', fn($q) =>
+            $q->where('hospital_id', $hospitalId)
+        );
+    }
+
+    // Scope: jadwal pada hari tertentu
+    public function scopeOnDay($query, string $day)
+    {
+        return $query->where('day_of_week', $day);
     }
 }

@@ -5,18 +5,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
     public function up(): void {
-        Schema::table('queues', function (Blueprint $table) {
-            $table->foreignId('hospital_id')->after('patient_id')
+        Schema::table('clinics', function (Blueprint $table) {
+            $table->foreignId('hospital_id')->after('id')
                   ->constrained('hospitals')->cascadeOnDelete();
-            $table->string('queue_number', 20)->change(); // PU-0001
+            $table->string('code', 10)->nullable()->after('name');
             $table->index('hospital_id');
-            $table->index(['booking_date','hospital_id']);
         });
     }
     public function down(): void {
-        Schema::table('queues', function (Blueprint $table) {
+        Schema::table('clinics', function (Blueprint $table) {
             $table->dropForeign(['hospital_id']);
-            $table->dropColumn('hospital_id');
+            $table->dropColumn(['hospital_id','code']);
         });
     }
 };
