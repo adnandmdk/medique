@@ -14,6 +14,9 @@ use App\Http\Controllers\Doctor\QueueController as DoctorQueueController;
 use App\Http\Controllers\Doctor\AttendanceController;
 use App\Http\Controllers\Patient\QueueController as PatientQueueController;
 use App\Http\Controllers\Auth\PatientRegisterController;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Artisan;
 
 // ── ROOT ──
 Route::get('/', fn() => redirect()->route('login'));
@@ -24,6 +27,18 @@ Route::get('/debug-db', function () {
         'database' => env('DB_DATABASE'),
         'user' => env('DB_USERNAME'),
     ]);
+});
+Route::get('/migrate-now', function () {
+    Artisan::call('migrate --force');
+    return 'Migrated!';
+    });
+    Route::get('/create-admin', function () {
+    User::create([
+        'name' => 'Admin',
+        'email' => 'admin@medique.test',
+        'password' => Hash::make('password123'),
+    ]);
+    return 'Admin created!';
 });
 
 // ── REGISTER PASIEN (guest only) ──
