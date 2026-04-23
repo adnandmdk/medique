@@ -128,6 +128,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/booking/schedules', [PatientQueueController::class, 'getSchedules'])
             ->name('booking.schedules');
     });
+    Route::get('/debug-db', function () {
+    return [
+        'host' => env('DB_HOST'),
+        'database' => env('DB_DATABASE'),
+        'user' => env('DB_USERNAME'),
+    ];
+});
 });
 
 require __DIR__.'/auth.php';
