@@ -18,6 +18,14 @@ use App\Http\Controllers\Auth\PatientRegisterController;
 // ── ROOT ──
 Route::get('/', fn() => redirect()->route('login'));
 
+Route::get('/debug-db', function () {
+    return response()->json([
+        'host' => env('DB_HOST'),
+        'database' => env('DB_DATABASE'),
+        'user' => env('DB_USERNAME'),
+    ]);
+});
+
 // ── REGISTER PASIEN (guest only) ──
 Route::middleware('guest')->group(function () {
     Route::get('/daftar', [PatientRegisterController::class, 'create'])
@@ -128,13 +136,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/booking/schedules', [PatientQueueController::class, 'getSchedules'])
             ->name('booking.schedules');
     });
-    Route::get('/debug-db', function () {
-    return [
-        'host' => env('DB_HOST'),
-        'database' => env('DB_DATABASE'),
-        'user' => env('DB_USERNAME'),
-    ];
-});
+    
 });
 
 require __DIR__.'/auth.php';
