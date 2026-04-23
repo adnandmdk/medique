@@ -1,12 +1,12 @@
 {{-- resources/views/admin/clinics/create.blade.php --}}
 <x-app-layout title="Tambah Poliklinik">
     <x-slot name="header"><div class="topbar-title">Tambah Poliklinik</div></x-slot>
-    <x-slot name="actions"><a href="{{ route('admin.clinics.index') }}" class="btn btn-secondary btn-sm">← Kembali</a></x-slot>
+    <x-slot name="actions"><a href="{{ route('admin.hospitals.clinics.index', $hospital->id) }}" class="btn btn-secondary btn-sm">← Kembali</a></x-slot>
     <div class="form-wrap">
         <div class="form-section">
             <div class="form-section-title">Informasi Poliklinik</div>
             <div class="form-section-sub">Isi data poliklinik baru</div>
-            <form action="{{ route('admin.clinics.store') }}" method="POST">
+            <form action="{{ route('admin.hospitals.clinics.store', $hospital->id) }}" method="POST">
                 @csrf
                 <div class="form-group">
                     <label class="form-label">Nama Poliklinik <span class="req">*</span></label>
@@ -30,7 +30,7 @@
                 </div>
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary">Simpan</button>
-                    <a href="{{ route('admin.clinics.index') }}" class="btn btn-secondary">Batal</a>
+                    <a href="{{ route('admin.hospitals.clinics.index', $hospital->id) }}" class="btn btn-secondary">Batal</a>
                 </div>
             </form>
         </div>

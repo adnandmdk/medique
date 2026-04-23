@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 
 class AttendanceController extends Controller
 {
-    // Toggle hadir/libur hari ini
     public function toggle(Request $request)
     {
         $doctor = $request->user()->doctor;
@@ -22,13 +21,12 @@ class AttendanceController extends Controller
             ['is_present' => true]
         );
 
-        // Jika sudah ada, toggle
         if (! $att->wasRecentlyCreated) {
             $att->update(['is_present' => ! $att->is_present]);
         }
 
         $status = $att->fresh()->is_present ? 'Hadir' : 'Libur';
 
-        return back()->with('success', "Status hari ini diperbarui: {$status}");
+        return back()->with('success', "Status hari ini: {$status}");
     }
 }

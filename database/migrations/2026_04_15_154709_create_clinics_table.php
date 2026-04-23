@@ -10,10 +10,15 @@ return new class extends Migration
     {
         Schema::create('clinics', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('hospital_id')
+                  ->constrained('hospitals')->cascadeOnDelete();
             $table->string('name');
-            $table->string('location');
+            $table->string('code', 10)->nullable();
+            $table->string('location')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
+
+            $table->index('hospital_id');
         });
     }
 

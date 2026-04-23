@@ -8,20 +8,13 @@ class QueueLog extends Model
 {
     public $timestamps = false;
 
-    protected $fillable = [
-        'queue_id',
-        'action',
-        'timestamp',
-    ];
+    protected $fillable = ['queue_id','action','timestamp'];
 
     protected function casts(): array
     {
-        return [
-            'timestamp' => 'datetime',
-        ];
+        return ['timestamp' => 'datetime'];
     }
 
-    // Relasi ke Queue
     public function queue()
     {
         return $this->belongsTo(Queue::class);

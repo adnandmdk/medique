@@ -11,15 +11,17 @@ return new class extends Migration
         Schema::create('schedules', function (Blueprint $table) {
             $table->id();
             $table->foreignId('doctor_id')
-                  ->constrained('doctors')
-                  ->cascadeOnDelete();
+                  ->constrained('doctors')->cascadeOnDelete();
             $table->enum('day_of_week', [
-                'monday', 'tuesday', 'wednesday',
-                'thursday', 'friday', 'saturday', 'sunday'
+                'monday','tuesday','wednesday',
+                'thursday','friday','saturday','sunday'
             ]);
             $table->time('start_time');
             $table->time('end_time');
             $table->timestamps();
+
+            $table->index('doctor_id');
+            $table->index('day_of_week');
         });
     }
 

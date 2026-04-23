@@ -2,11 +2,12 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
+use App\Models\Hospital;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RoleSeeder extends Seeder
 {
@@ -19,11 +20,11 @@ class RoleSeeder extends Seeder
         $patient = Role::firstOrCreate(['name' => 'patient']);
 
         $permissions = [
-            'clinic.view', 'clinic.create', 'clinic.edit', 'clinic.delete',
-            'doctor.view', 'doctor.create', 'doctor.edit', 'doctor.delete',
-            'schedule.view', 'schedule.create', 'schedule.edit', 'schedule.delete',
-            'queue.view', 'queue.create', 'queue.edit', 'queue.delete',
-            'queue.call', 'queue.process',
+            'clinic.view','clinic.create','clinic.edit','clinic.delete',
+            'doctor.view','doctor.create','doctor.edit','doctor.delete',
+            'schedule.view','schedule.create','schedule.edit','schedule.delete',
+            'queue.view','queue.create','queue.edit','queue.delete',
+            'queue.call','queue.process',
         ];
 
         foreach ($permissions as $perm) {
@@ -31,45 +32,73 @@ class RoleSeeder extends Seeder
         }
 
         $admin->syncPermissions(Permission::all());
-        $doctor->syncPermissions([
-            'schedule.view',
-            'queue.view', 'queue.call', 'queue.process',
-        ]);
-        $patient->syncPermissions([
-            'queue.view', 'queue.create',
-        ]);
+        $doctor->syncPermissions(['schedule.view','queue.view','queue.call','queue.process']);
+        $patient->syncPermissions(['queue.view','queue.create']);
 
-        $this->createUser('Super Admin',  'admin@medique.test',   '081200000000', 'admin');
-        $this->createUser('Dr. John Doe', 'doctor@medique.test',  '081200000001', 'doctor');
-        $this->createUser('Jane Patient', 'patient@medique.test', '081200000002', 'patient');
+        $hospital = Hospital::first();
 
-        $this->command->info('✅ Seeder selesai!');
+        // Super Admin
+        $superAdmin = User::firstOrCreate(
+            ['email' => 'superadmin@medique.test'],
+            [
+                'hospital_id'    => null,
+                'name'           => 'Super Admin',
+                'password'       => Hash::make('password'),
+                'phone'          => '081200000000',
+                'role'           => 'admin',
+                'is_super_admin' => true,
+            ]
+        );
+        $superAdmin->assignRole('admin');
+
+        // Admin RS
+        $adminUser = User::firstOrCreate(
+            ['email' => 'admin@medique.test'],
+            [
+                'hospital_id' => optional($hospital)->id,
+                'name'        => 'Admin Medika',
+                'password'    => Hash::make('password'),
+                'phone'       => '081200000001',
+                'role'        => 'admin',
+            ]
+        );
+        $adminUser->assignRole('admin');
+
+        // Doctor
+        $doctorUser = User::firstOrCreate(
+            ['email' => 'doctor@medique.test'],
+            [
+                'hospital_id' => optional($hospital)->id,
+                'name'        => 'Dr. John Doe',
+                'password'    => Hash::make('password'),
+                'phone'       => '081200000002',
+                'role'        => 'doctor',
+            ]
+        );
+        $doctorUser->assignRole('doctor');
+
+        // Patient
+        $patientUser = User::firstOrCreate(
+            ['email' => 'patient@medique.test'],
+            [
+                'hospital_id' => optional($hospital)->id,
+                'name'        => 'Jane Patient',
+                'password'    => Hash::make('password'),
+                'phone'       => '081200000003',
+                'role'        => 'patient',
+            ]
+        );
+        $patientUser->assignRole('patient');
+
+        $this->command->info('✅ Roles & Users seeded!');
         $this->command->table(
             ['Role', 'Email', 'Password'],
             [
-                ['Admin',   'admin@medique.test',   'password'],
-                ['Doctor',  'doctor@medique.test',  'password'],
-                ['Patient', 'patient@medique.test', 'password'],
+                ['Super Admin', 'superadmin@medique.test', 'password'],
+                ['Admin',       'admin@medique.test',       'password'],
+                ['Doctor',      'doctor@medique.test',      'password'],
+                ['Patient',     'patient@medique.test',     'password'],
             ]
         );
-    }
-
-    private function createUser(string $name, string $email, string $phone, string $role): User
-    {
-        $user = User::firstOrCreate(
-            ['email' => $email],
-            [
-                'name'     => $name,
-                'password' => Hash::make('password'),
-                'phone'    => $phone,
-                'role'     => $role,
-            ]
-        );
-
-        if (! $user->hasRole($role)) {
-            $user->assignRole($role);
-        }
-
-        return $user;
     }
 }

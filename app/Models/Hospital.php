@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -46,6 +47,8 @@ class Hospital extends Model
     public function getInitialsAttribute(): string
     {
         $words = explode(' ', $this->name);
-        return strtoupper(collect($words)->take(2)->map(fn($w) => $w[0])->join(''));
+        return strtoupper(
+            collect($words)->take(2)->map(fn($w) => $w[0] ?? '')->join('')
+        );
     }
 }

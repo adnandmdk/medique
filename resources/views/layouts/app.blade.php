@@ -33,10 +33,16 @@
 
         <main class="page-body">
             @if(session('success'))
-                <div class="alert alert-success"><svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg><span>{{ session('success') }}</span></div>
+                <div class="alert alert-success">
+                    <svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg>
+                    <span>{{ session('success') }}</span>
+                </div>
             @endif
             @if(session('error'))
-                <div class="alert alert-danger"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg><span>{{ session('error') }}</span></div>
+                <div class="alert alert-danger">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>
+                    <span>{{ session('error') }}</span>
+                </div>
             @endif
             {{ $slot }}
         </main>

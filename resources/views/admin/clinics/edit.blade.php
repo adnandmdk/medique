@@ -1,12 +1,12 @@
 {{-- resources/views/admin/clinics/edit.blade.php --}}
 <x-app-layout title="Edit Poliklinik">
     <x-slot name="header"><div class="topbar-title">Edit Poliklinik</div></x-slot>
-    <x-slot name="actions"><a href="{{ route('admin.clinics.index') }}" class="btn btn-secondary btn-sm">← Kembali</a></x-slot>
+    <x-slot name="actions"><a href="{{ route('admin.hospitals.clinics.index', $hospital->id) }}" class="btn btn-secondary btn-sm">← Kembali</a></x-slot>
     <div class="form-wrap">
         <div class="form-section">
             <div class="form-section-title">Edit Poliklinik</div>
             <div class="form-section-sub">Perbarui data <strong>{{ $clinic->name }}</strong></div>
-            <form action="{{ route('admin.clinics.update', $clinic) }}" method="POST">
+            <form action="{{ route('admin.hospitals.clinics.update', ['hospital' => $hospital->id, 'clinic' => $clinic->id]) }}" method="POST">
                 @csrf @method('PATCH')
                 <div class="form-group">
                     <label class="form-label">Nama Poliklinik <span class="req">*</span></label>
@@ -28,7 +28,7 @@
                 </div>
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary">Update</button>
-                    <a href="{{ route('admin.clinics.index') }}" class="btn btn-secondary">Batal</a>
+                    <a href="{{ route('admin.hospitals.clinics.index', $hospital->id) }}" class="btn btn-secondary">Batal</a>
                 </div>
             </form>
         </div>

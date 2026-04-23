@@ -11,15 +11,11 @@ return new class extends Migration
         Schema::create('queue_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('queue_id')
-                  ->constrained('queues')
-                  ->cascadeOnDelete();
-            $table->enum('action', [
-                'called',
-                'started',
-                'finished',
-                'cancelled',
-            ]);
+                  ->constrained('queues')->cascadeOnDelete();
+            $table->enum('action', ['called','started','finished','cancelled']);
             $table->timestamp('timestamp')->useCurrent();
+
+            $table->index('queue_id');
         });
     }
 

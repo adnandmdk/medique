@@ -1,7 +1,7 @@
 <x-app-layout title="Jadwal Praktek">
     <x-slot name="header"><div class="topbar-title">Jadwal Praktek</div></x-slot>
     <x-slot name="actions">
-        <a href="{{ route('admin.schedules.create') }}" class="btn btn-primary btn-sm">
+        <a href="{{ route('admin.hospitals.schedules.create', $hospital->id) }}" class="btn btn-primary btn-sm">
             <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Tambah Jadwal
         </a>
@@ -102,8 +102,8 @@
                                 <span style="font-size:13px;font-weight:700;">{{ $schedule->end_time_label }}</span>
                             </div>
                             <div style="display:flex;gap:6px;">
-                                <a href="{{ route('admin.schedules.edit', $schedule) }}" class="btn btn-secondary btn-xs">Edit</a>
-                                <form action="{{ route('admin.schedules.destroy', $schedule) }}" method="POST" onsubmit="return confirm('Hapus jadwal ini?')">
+                                <a href="{{ route('admin.hospitals.schedules.edit', [$hospital->id, $schedule->id]) }}" class="btn btn-secondary btn-xs">Edit</a>
+                                <form action="{{ route('admin.hospitals.schedules.destroy', [$hospital->id, $schedule->id]) }}" method="POST" onsubmit="return confirm('Hapus jadwal ini?')">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="btn btn-danger btn-xs">Hapus</button>
                                 </form>
@@ -117,7 +117,7 @@
                 <div class="empty-state">
                     <div class="empty-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
                     <div class="empty-title">Belum ada jadwal</div>
-                    <a href="{{ route('admin.schedules.create') }}" class="btn btn-primary btn-sm">+ Tambah Jadwal</a>
+                    <a href="{{ route('admin.hospitals.schedules.create', $hospital->id) }}" class="btn btn-primary btn-sm">+ Tambah Jadwal</a>
                 </div>
             </div>
         @endforelse

@@ -2,7 +2,7 @@
 <x-app-layout title="Dokter">
     <x-slot name="header"><div class="topbar-title">Dokter</div></x-slot>
     <x-slot name="actions">
-        <a href="{{ route('admin.doctors.create') }}" class="btn btn-primary btn-sm">
+        <a href="{{ route('admin.hospitals.doctors.create', $hospital->id) }}" class="btn btn-primary btn-sm">
             <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Tambah Dokter
         </a>
@@ -47,8 +47,8 @@
                         <td><span class="token">{{ $doctor->licence_number }}</span></td>
                         <td>
                             <div style="display:flex;gap:6px;">
-                                <a href="{{ route('admin.doctors.edit', $doctor) }}" class="btn btn-secondary btn-sm">Edit</a>
-                                <form action="{{ route('admin.doctors.destroy', $doctor) }}" method="POST" onsubmit="return confirm('Hapus dokter ini?')">
+                                <a href="{{ route('admin.hospitals.doctors.edit', [$hospital->id, $doctor->id]) }}" class="btn btn-secondary btn-sm">Edit</a>
+                                <form action="{{ route('admin.hospitals.doctors.destroy', [$hospital->id, $doctor->id]  ) }}" method="POST" onsubmit="return confirm('Hapus dokter ini?')">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
                                 </form>

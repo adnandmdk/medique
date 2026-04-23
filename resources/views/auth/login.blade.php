@@ -10,20 +10,20 @@
     <style>
         body{font-family:'Inter',sans-serif;background:#F8FAFC;display:flex;min-height:100vh;margin:0;}
         .al{flex:1;background:#0F6E56;display:flex;flex-direction:column;justify-content:space-between;padding:48px;position:relative;overflow:hidden;}
-        .al::before{content:'';position:absolute;right:-80px;top:-80px;width:320px;height:320px;border-radius:50%;background:rgba(255,255,255,0.04);}
-        .al::after{content:'';position:absolute;left:-60px;bottom:-80px;width:240px;height:240px;border-radius:50%;background:rgba(255,255,255,0.04);}
-        .al-brand{position:relative;z-index:1;}
-        .al-logo{display:flex;align-items:center;gap:12px;margin-bottom:2px;}
-        .al-logo-icon{width:40px;height:40px;background:rgba(255,255,255,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;}
+        .al::before{content:'';position:absolute;right:-80px;top:-80px;width:320px;height:320px;border-radius:50%;background:rgba(255,255,255,.04);}
+        .al::after{content:'';position:absolute;left:-60px;bottom:-80px;width:240px;height:240px;border-radius:50%;background:rgba(255,255,255,.04);}
+        .al-logo{display:flex;align-items:center;gap:12px;position:relative;z-index:1;}
+        .al-logo-icon{width:40px;height:40px;background:rgba(255,255,255,.15);border-radius:10px;display:flex;align-items:center;justify-content:center;}
         .al-logo-icon svg{width:20px;height:20px;stroke:white;fill:none;stroke-width:2;}
         .al-logo-text{font-size:24px;font-weight:800;color:white;letter-spacing:-.5px;}
-        .al-tagline{font-size:11px;color:rgba(255,255,255,0.55);font-weight:500;letter-spacing:.3px;margin-left:52px;}
+        .al-tagline{font-size:11px;color:rgba(255,255,255,.55);font-weight:500;margin-top:2px;}
         .al-content{position:relative;z-index:1;}
         .al-h1{font-size:28px;font-weight:800;color:white;line-height:1.25;margin-bottom:12px;}
         .al-desc{font-size:14px;color:rgba(255,255,255,.72);line-height:1.75;margin-bottom:24px;}
         .al-feat{display:flex;flex-direction:column;gap:10px;}
         .al-feat-item{display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(255,255,255,.85);}
         .al-feat-item svg{width:16px;height:16px;stroke:white;fill:none;stroke-width:2;}
+        .al-footer{font-size:12px;color:rgba(255,255,255,.35);position:relative;z-index:1;}
         .ar{width:440px;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:48px 40px;background:#F8FAFC;}
         .ar-wrap{width:100%;}
         .ar-title{font-size:22px;font-weight:800;color:#0F172A;margin-bottom:4px;}
@@ -49,32 +49,31 @@
         .btn-login:hover{background:#0D5E48;}
         .divider{display:flex;align-items:center;gap:12px;margin:16px 0;font-size:11px;color:#94A3B8;}
         .divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(15,23,42,.08);}
-        .ar-footer{text-align:center;font-size:13px;color:#64748B;margin-top:8px;}
+        .ar-footer{text-align:center;font-size:13px;color:#64748B;}
         .ar-footer a{color:#0F6E56;font-weight:700;text-decoration:none;}
         .ar-display{text-align:center;margin-top:12px;}
         .ar-display a{font-size:12px;color:#94A3B8;text-decoration:none;display:inline-flex;align-items:center;gap:5px;}
-        .ar-display a:hover{color:#64748B;}
         .ar-display svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;}
         .err{background:#FEF2F2;color:#991B1B;border:1px solid #FECACA;padding:10px 13px;border-radius:8px;font-size:13px;margin-bottom:14px;}
-        .suc{background:#ECFDF5;color:#065F46;border:1px solid #A7F3D0;padding:10px 13px;border-radius:8px;font-size:13px;margin-bottom:14px;}
         @media(max-width:768px){.al{display:none;}.ar{width:100%;padding:32px 20px;}}
     </style>
 </head>
 <body>
-
 <div class="al">
-    <div class="al-brand">
+    <div>
         <div class="al-logo">
             <div class="al-logo-icon">
                 <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
             </div>
-            <span class="al-logo-text">Medique</span>
+            <div>
+                <div class="al-logo-text">Medique</div>
+                <div class="al-tagline">Built for Health Services</div>
+            </div>
         </div>
-        <div class="al-tagline">Built for Health Services</div>
     </div>
     <div class="al-content">
         <div class="al-h1">Sistem Antrian<br>Rumah Sakit Modern</div>
-        <div class="al-desc">Kelola antrian pasien secara digital. Efisien, transparan, dan mudah digunakan oleh seluruh pihak.</div>
+        <div class="al-desc">Kelola antrian pasien secara digital. Efisien, transparan, dan mudah digunakan.</div>
         <div class="al-feat">
             <div class="al-feat-item"><svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg>Booking antrian kapan saja</div>
             <div class="al-feat-item"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>Pantau posisi antrian real-time</div>
@@ -82,7 +81,7 @@
             <div class="al-feat-item"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Multi rumah sakit</div>
         </div>
     </div>
-    <div style="font-size:12px;color:rgba(255,255,255,.35);position:relative;z-index:1;">© {{ date('Y') }} Medique</div>
+    <div class="al-footer">© {{ date('Y') }} Medique</div>
 </div>
 
 <div class="ar">
@@ -111,9 +110,6 @@
         @if($errors->any())
             <div class="err">Email atau password salah. Silakan coba lagi.</div>
         @endif
-        @if(session('success'))
-            <div class="suc">{{ session('success') }}</div>
-        @endif
 
         <form method="POST" action="{{ route('login') }}">
             @csrf
@@ -138,7 +134,10 @@
                 </div>
             </div>
             <div class="f-group">
-                <label class="f-check"><input type="checkbox" name="remember"><span>Ingat saya 30 hari</span></label>
+                <label class="f-check">
+                    <input type="checkbox" name="remember">
+                    <span>Ingat saya 30 hari</span>
+                </label>
             </div>
             <button type="submit" class="btn-login">Masuk ke Akun</button>
         </form>

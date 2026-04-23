@@ -37,11 +37,12 @@
                 <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
                 Rumah Sakit
             </a>
-            <a href="{{ route('admin.queues.index', ['hospital' => auth()->user()->hospital_id ?? 1]) }}" class="nav-item {{ request()->routeIs('admin.queues.*') ? 'active' : '' }}">
-                <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
-                Antrian
-                @php $wq = \App\Models\Queue::where('status','waiting')->count(); @endphp
-                @if($wq > 0)<span class="nav-badge">{{ $wq }}</span>@endif
+        </div>
+        <div class="nav-section">
+            <span class="nav-label">Lainnya</span>
+            <a href="{{ route('queue.display') }}" target="_blank" class="nav-item">
+                <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                Display TV
             </a>
         </div>
         @endif
@@ -56,8 +57,16 @@
             <a href="{{ route('doctor.queues.index') }}" class="nav-item {{ request()->routeIs('doctor.queues.*') ? 'active' : '' }}">
                 <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/></svg>
                 Antrian Hari Ini
-                @php $myD=auth()->user()->doctor; $mq=$myD?\App\Models\Queue::whereHas('schedule',fn($q)=>$q->where('doctor_id',$myD->id))->where('booking_date',today())->whereIn('status',['waiting','called'])->count():0; @endphp
-                @if($mq>0)<span class="nav-badge g">{{ $mq }}</span>@endif
+                @php
+                    $myDoc = auth()->user()->doctor;
+                    $mq = $myDoc
+                        ? \App\Models\Queue::whereHas('schedule', fn($q) => $q->where('doctor_id',$myDoc->id))
+                            ->where('booking_date',today())
+                            ->whereIn('status',['waiting','called'])
+                            ->count()
+                        : 0;
+                @endphp
+                @if($mq > 0)<span class="nav-badge g">{{ $mq }}</span>@endif
             </a>
             <a href="{{ route('doctor.schedules.index') }}" class="nav-item {{ request()->routeIs('doctor.schedules.*') ? 'active' : '' }}">
                 <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>

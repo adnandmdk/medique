@@ -10,11 +10,14 @@ return new class extends Migration
     {
         Schema::create('doctor_attendances', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('doctor_id')->constrained('doctors')->cascadeOnDelete();
+            $table->foreignId('doctor_id')
+                  ->constrained('doctors')->cascadeOnDelete();
             $table->date('date');
             $table->boolean('is_present')->default(true);
             $table->timestamps();
+
             $table->unique(['doctor_id', 'date']);
+            $table->index('date');
         });
     }
 

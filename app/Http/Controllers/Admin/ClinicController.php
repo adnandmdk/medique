@@ -3,60 +3,76 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Clinic\StoreClinicRequest;
-use App\Http\Requests\Clinic\UpdateClinicRequest;
 use App\Models\Clinic;
-use App\Services\ClinicService;
-use Illuminate\Http\RedirectResponse;
+use App\Models\Hospital;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class ClinicController extends Controller
 {
-    public function __construct(
-        private readonly ClinicService $clinicService
-    ) {}
-
-    public function index()
+    public function index(Hospital $hospital): View
     {
-       $clinics = $this->clinicService->getAll();
-    return view('admin.clinics.index', compact('clinics'));
+        $clinics = Clinic::where('hospital_id', $hospital->id)
+            ->withCount('doctors')
+            ->paginate(15);
+
+        return view('admin.clinics.index', compact('hospital', 'clinics'));
     }
 
-    public function create(): View
+    public function create(Hospital $hospital): View
     {
-        return view('admin.clinics.create');
+        return view('admin.clinics.create', compact('hospital'));
     }
 
-    public function store(StoreClinicRequest $request): RedirectResponse
+    public function store(Request $request, Hospital $hospital)
     {
-        $this->clinicService->store($request);
-        return redirect()->route('admin.clinics.index')
+        $data = $request->validate([
+            'name'      => 'required|string|max:100',
+            'code'      => 'nullable|string|max:10',
+            'location'  => 'nullable|string|max:255',
+            'is_active' => 'sometimes|boolean',
+        ]);
+
+        $data['hospital_id'] = $hospital->id;
+        $data['is_active']   = $request->boolean('is_active', true);
+
+        Clinic::create($data);
+
+        return redirect()->route('admin.hospitals.clinics.index', $hospital)
             ->with('success', 'Poliklinik berhasil ditambahkan.');
     }
 
-    public function edit(Clinic $clinic): View
+    public function edit(Hospital $hospital, Clinic $clinic): View
     {
-        return view('admin.clinics.edit', compact('clinic'));
+        return view('admin.clinics.edit', compact('hospital', 'clinic'));
     }
 
-    public function update(UpdateClinicRequest $request, Clinic $clinic): RedirectResponse
+    public function update(Request $request, Hospital $hospital, Clinic $clinic)
     {
-        $this->clinicService->update($request, $clinic);
-        return redirect()->route('admin.clinics.index')
+        $data = $request->validate([
+            'name'      => 'required|string|max:100',
+            'code'      => 'nullable|string|max:10',
+            'location'  => 'nullable|string|max:255',
+            'is_active' => 'sometimes|boolean',
+        ]);
+
+        $data['is_active'] = $request->boolean('is_active', true);
+        $clinic->update($data);
+
+        return redirect()->route('admin.hospitals.clinics.index', $hospital)
             ->with('success', 'Poliklinik berhasil diperbarui.');
     }
 
-    public function destroy(Clinic $clinic): RedirectResponse
+    public function destroy(Hospital $hospital, Clinic $clinic)
     {
-        $this->clinicService->destroy($clinic);
-        return redirect()->route('admin.clinics.index')
-            ->with('success', 'Poliklinik berhasil dihapus.');
+        $clinic->delete();
+        return redirect()->route('admin.hospitals.clinics.index', $hospital)
+            ->with('success', 'Poliklinik dihapus.');
     }
 
-    public function toggleStatus(Clinic $clinic): RedirectResponse
+    public function toggleStatus(Hospital $hospital, Clinic $clinic)
     {
-        $this->clinicService->toggleStatus($clinic);
-        return redirect()->route('admin.clinics.index')
-            ->with('success', 'Status poliklinik berhasil diubah.');
+        $clinic->update(['is_active' => ! $clinic->is_active]);
+        return back()->with('success', 'Status poliklinik diperbarui.');
     }
 }

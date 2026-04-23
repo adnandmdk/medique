@@ -2,7 +2,7 @@
 <x-app-layout title="Poliklinik">
     <x-slot name="header"><div class="topbar-title">Poliklinik</div></x-slot>
     <x-slot name="actions">
-        <a href="{{ route('admin.clinics.create') }}" class="btn btn-primary btn-sm">
+        <a href="{{ route('admin.hospitals.clinics.create', $hospital->id) }}" class="btn btn-primary btn-sm">
             <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Tambah Poliklinik
         </a>
@@ -36,7 +36,7 @@
                         </td>
                         <td style="color:var(--text2);">{{ $clinic->location }}</td>
                         <td>
-                            <form action="{{ route('admin.clinics.toggle', $clinic) }}" method="POST" style="display:inline;">
+                            <form action="{{ route('admin.hospitals.clinics.toggle', ['hospital' => $hospital->id, 'clinic' => $clinic->id]) }}" method="POST" style="display:inline;">
                                 @csrf @method('PATCH')
                                 <button type="submit" class="badge {{ $clinic->is_active ? 'badge-active' : 'badge-inactive' }}" style="cursor:pointer;border:none;font-family:inherit;">
                                     {{ $clinic->is_active ? 'Aktif' : 'Nonaktif' }}
@@ -45,8 +45,8 @@
                         </td>
                         <td>
                             <div style="display:flex;gap:6px;">
-                                <a href="{{ route('admin.clinics.edit', $clinic) }}" class="btn btn-secondary btn-sm">Edit</a>
-                                <form action="{{ route('admin.clinics.destroy', $clinic) }}" method="POST" onsubmit="return confirm('Hapus poliklinik ini?')">
+                                <a href="{{ route('admin.hospitals.clinics.edit', ['hospital' => $hospital->id, 'clinic' => $clinic->id]) }}" class="btn btn-secondary btn-sm">Edit</a>
+                                <form action="{{ route('admin.hospitals.clinics.destroy', ['hospital' => $hospital->id, 'clinic' => $clinic->id]) }}" method="POST" onsubmit="return confirm('Hapus poliklinik ini?')">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
                                 </form>

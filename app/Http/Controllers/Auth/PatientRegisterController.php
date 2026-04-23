@@ -20,18 +20,17 @@ class PatientRegisterController extends Controller
     {
         $request->validate([
             'name'     => ['required', 'string', 'max:255'],
-            'email'    => ['required', 'email', 'max:255', 'unique:users,email'],
+            'email'    => ['required', 'email', 'unique:users,email'],
             'phone'    => ['required', 'string', 'max:20'],
             'password' => ['required', 'confirmed', Password::min(8)],
             'terms'    => ['accepted'],
         ], [
             'name.required'      => 'Nama lengkap wajib diisi.',
             'email.required'     => 'Email wajib diisi.',
-            'email.unique'       => 'Email sudah terdaftar. Gunakan email lain.',
+            'email.unique'       => 'Email sudah terdaftar.',
             'phone.required'     => 'Nomor HP wajib diisi.',
             'password.required'  => 'Password wajib diisi.',
             'password.confirmed' => 'Konfirmasi password tidak cocok.',
-            'password.min'       => 'Password minimal 8 karakter.',
             'terms.accepted'     => 'Anda harus menyetujui syarat & ketentuan.',
         ]);
 
@@ -44,10 +43,9 @@ class PatientRegisterController extends Controller
         ]);
 
         $user->assignRole('patient');
-
         Auth::login($user);
 
         return redirect()->route('dashboard')
-            ->with('success', 'Selamat datang, ' . $user->name . '! Akun pasien Anda berhasil dibuat.');
+            ->with('success', 'Selamat datang, ' . $user->name . '!');
     }
 }

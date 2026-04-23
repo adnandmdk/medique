@@ -17,10 +17,12 @@
     <div class="hospitals-grid">
         @forelse($hospitals as $hospital)
             <a href="{{ route('admin.hospitals.show', $hospital) }}" class="hospital-card">
-                <div class="hc-avatar">{{ $hospital->initials }}</div>
-                <div class="hc-name">{{ $hospital->name }}</div>
-                <div class="hc-addr">{{ $hospital->address ?? 'Alamat belum diisi' }}</div>
-                <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+                <div style="width:48px;height:48px;border-radius:12px;background:var(--brand-light);color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;margin-bottom:12px;">
+                    {{ $hospital->initials }}
+                </div>
+                <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px;">{{ $hospital->name }}</div>
+                <div style="font-size:12px;color:var(--text2);margin-bottom:10px;">{{ $hospital->address ?? 'Alamat belum diisi' }}</div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
                     <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:var(--brand-light);color:var(--brand);">
                         {{ $hospital->clinics_count ?? 0 }} Poli
                     </span>
@@ -38,8 +40,11 @@
         @empty
             <div style="grid-column:1/-1;">
                 <div class="empty-state">
-                    <div class="empty-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>
+                    <div class="empty-icon">
+                        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+                    </div>
                     <div class="empty-title">Belum ada rumah sakit</div>
+                    <div class="empty-sub">Tambahkan rumah sakit pertama Anda</div>
                     <a href="{{ route('admin.hospitals.create') }}" class="btn btn-primary btn-sm">+ Tambah Sekarang</a>
                 </div>
             </div>

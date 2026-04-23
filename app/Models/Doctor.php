@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,10 +14,30 @@ class Doctor extends Model
         'specialization','licence_number',
     ];
 
-    public function hospital()  { return $this->belongsTo(Hospital::class); }
-    public function user()      { return $this->belongsTo(User::class); }
-    public function clinic()    { return $this->belongsTo(Clinic::class); }
-    public function schedules() { return $this->hasMany(Schedule::class); }
+    public function hospital()
+    {
+        return $this->belongsTo(Hospital::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function clinic()
+    {
+        return $this->belongsTo(Clinic::class);
+    }
+
+    public function schedules()
+    {
+        return $this->hasMany(Schedule::class);
+    }
+
+    public function attendances()
+    {
+        return $this->hasMany(DoctorAttendance::class);
+    }
 
     public function scopeForHospital($query, int $hospitalId)
     {

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -22,7 +23,15 @@ class Schedule extends Model
         'sunday'    => 'Minggu',
     ];
 
-    public function doctor() { return $this->belongsTo(Doctor::class); }
+    public function doctor()
+    {
+        return $this->belongsTo(Doctor::class);
+    }
+
+    public function queues()
+    {
+        return $this->hasMany(Queue::class);
+    }
 
     public function getDayLabelAttribute(): string
     {
@@ -39,7 +48,6 @@ class Schedule extends Model
         return substr($this->end_time, 0, 5);
     }
 
-    // Scope: jadwal tersedia untuk hospital tertentu
     public function scopeForHospital($query, int $hospitalId)
     {
         return $query->whereHas('doctor', fn($q) =>
@@ -47,7 +55,6 @@ class Schedule extends Model
         );
     }
 
-    // Scope: jadwal pada hari tertentu
     public function scopeOnDay($query, string $day)
     {
         return $query->where('day_of_week', $day);

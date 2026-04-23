@@ -8,7 +8,7 @@
         <div class="card-header">
             <div>
                 <div class="card-title">Daftar Antrian</div>
-                <div class="card-subtitle">Total {{ $queues->total() }} pasien hari ini</div>
+                <div class="card-subtitle">Total {{ $queues->count() }} pasien hari ini</div>
             </div>
         </div>
         <table>
@@ -65,15 +65,6 @@
                 @endforelse
             </tbody>
         </table>
-        @if($queues->hasPages())
-            <div class="pagination">
-                <span class="pagination-info">{{ $queues->firstItem() }}–{{ $queues->lastItem() }} dari {{ $queues->total() }}</span>
-                <div class="pagination-btns">
-                    @foreach($queues->getUrlRange(1,$queues->lastPage()) as $page => $url)
-                        <a href="{{ $url }}" class="page-btn {{ $page===$queues->currentPage()?'active':'' }}">{{ $page }}</a>
-                    @endforeach
-                </div>
-            </div>
-        @endif
+        
     </div>
 </x-app-layout>

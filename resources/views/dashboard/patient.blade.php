@@ -20,7 +20,7 @@
                     Menuju: <strong>{{ optional(optional(optional($activeQueue->schedule)->doctor)->clinic)->name ?? 'Ruangan' }}</strong><br>
                     Dokter: <strong>{{ optional(optional($activeQueue->schedule)->doctor)->user->name ?? '—' }}</strong>
                 </div>
-                <div style="font-size:12px;color:#64748B;margin-bottom:4px;">Hangus dalam</div>
+                <div style="font-size:12px;color:#64748B;margin-bottom:4px;">Antrian hangus dalam</div>
                 <div style="font-size:28px;font-weight:800;color:#F59E0B;" id="countdown">10:00</div>
                 <div style="height:4px;border-radius:2px;background:#F1F5F9;margin:8px 0 16px;overflow:hidden;">
                     <div id="countBar" style="height:100%;border-radius:2px;background:#059669;width:100%;transition:width 1s linear;"></div>
@@ -32,8 +32,8 @@
             </div>
         </div>
         <style>
-            @keyframes popIn{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
-            @keyframes ring{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+        @keyframes popIn{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+        @keyframes ring{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
         </style>
         <script>
         (function(){
@@ -45,11 +45,11 @@
                 const left=Math.max(0,total-Math.floor((Date.now()-start)/1000));
                 const m=String(Math.floor(left/60)).padStart(2,'0');
                 const s=String(left%60).padStart(2,'0');
-                const e=document.getElementById('countdown');
-                const b=document.getElementById('countBar');
-                if(e) e.textContent=left>0?m+':'+s:'HANGUS';
-                const p=(left/total)*100;
-                if(b){b.style.width=p+'%';b.style.background=p>50?'#059669':p>20?'#F59E0B':'#EF4444';}
+                const el=document.getElementById('countdown');
+                const bar=document.getElementById('countBar');
+                if(el) el.textContent=left>0?m+':'+s:'HANGUS';
+                const pct=(left/total)*100;
+                if(bar){bar.style.width=pct+'%';bar.style.background=pct>50?'#059669':pct>20?'#F59E0B':'#EF4444';}
                 if(left>0) setTimeout(tick,1000);
             })();
             @endif
@@ -59,13 +59,13 @@
 
     {{-- GREETING --}}
     <div style="background:linear-gradient(135deg,#0F6E56,#10B981);border-radius:14px;padding:22px;color:white;margin-bottom:14px;position:relative;overflow:hidden;">
-        <div style="position:absolute;right:-30px;top:-30px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.05);"></div>
+        <div style="position:absolute;right:-30px;top:-30px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.05);pointer-events:none;"></div>
         <div style="position:relative;z-index:1;">
             <div style="font-size:11px;opacity:.7;font-weight:600;text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px;">Selamat Datang</div>
             <div style="font-size:18px;font-weight:800;margin-bottom:12px;">{{ auth()->user()->name }}</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
                 <a href="{{ route('patient.queues.create') }}" style="background:white;color:#0F6E56;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:5px;">
-                    + Booking Antrian
+                    <span>+</span> Booking Antrian
                 </a>
                 <a href="{{ route('profile.show') }}" style="background:rgba(255,255,255,.15);color:white;border:1px solid rgba(255,255,255,.3);padding:8px 14px;border-radius:8px;font-size:12px;text-decoration:none;">
                     Profil Saya
@@ -77,8 +77,8 @@
     {{-- ANTRIAN AKTIF --}}
     @if($activeQueue)
         @php
-            $colors=['waiting'=>['#FFFBEB','#92400E','#D97706'],'called'=>['#EFF6FF','#1E40AF','#3B82F6'],'in_progress'=>['#F5F3FF','#5B21B6','#8B5CF6'],'done'=>['#ECFDF5','#065F46','#059669'],'cancelled'=>['#FEF2F2','#991B1B','#EF4444']];
-            [$bg,$fg,$dot]=$colors[$activeQueue->status]??['#F1F5F9','#475569','#94A3B8'];
+            $sc=['waiting'=>['#FFFBEB','#92400E','#D97706'],'called'=>['#EFF6FF','#1E40AF','#3B82F6'],'in_progress'=>['#F5F3FF','#5B21B6','#8B5CF6'],'done'=>['#ECFDF5','#065F46','#059669'],'cancelled'=>['#FEF2F2','#991B1B','#EF4444']];
+            [$bg,$fg,$dot]=$sc[$activeQueue->status]??['#F1F5F9','#475569','#94A3B8'];
         @endphp
         <div style="background:white;border-radius:14px;border:1.5px solid #E2E8F0;padding:18px;margin-bottom:14px;">
             <div style="font-size:10px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Antrian Aktif</div>
@@ -106,11 +106,14 @@
             @if($activeQueue->status === 'waiting' && $position !== null)
                 <div style="margin-top:12px;padding-top:12px;border-top:1px solid #F1F5F9;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
                     <div style="font-size:12px;color:#64748B;">
-                        ⏱ ~{{ $position * 10 }} menit lagi ({{ $position }} antrian sebelum Anda)
+                        ⏱ Estimasi ~{{ $position * 10 }} menit ({{ $position }} antrian sebelum Anda)
                     </div>
-                    <form method="POST" action="{{ route('patient.queues.cancel', $activeQueue) }}" onsubmit="return confirm('Batalkan antrian?')">
+                    <form method="POST" action="{{ route('patient.queues.cancel', $activeQueue) }}"
+                          onsubmit="return confirm('Batalkan antrian ini?')">
                         @csrf @method('PATCH')
-                        <button type="submit" style="background:#FEF2F2;color:#991B1B;border:none;padding:5px 11px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">Batalkan</button>
+                        <button type="submit" style="background:#FEF2F2;color:#991B1B;border:none;padding:5px 11px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">
+                            Batalkan
+                        </button>
                     </form>
                 </div>
             @endif
@@ -120,7 +123,9 @@
             <div style="font-size:30px;margin-bottom:8px;">📋</div>
             <div style="font-size:14px;font-weight:700;color:#0F172A;margin-bottom:3px;">Tidak ada antrian aktif</div>
             <div style="font-size:12px;color:#94A3B8;margin-bottom:12px;">Booking untuk berobat sekarang</div>
-            <a href="{{ route('patient.queues.create') }}" style="display:inline-block;background:#0F6E56;color:white;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;">+ Booking Sekarang</a>
+            <a href="{{ route('patient.queues.create') }}" style="display:inline-block;background:#0F6E56;color:white;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;">
+                + Booking Sekarang
+            </a>
         </div>
     @endif
 
@@ -131,7 +136,7 @@
             <div style="font-size:24px;font-weight:800;color:#0F172A;">{{ $totalBookings }}</div>
         </div>
         <div style="background:#ECFDF5;border-radius:12px;border:1px solid #A7F3D0;padding:14px;">
-            <div style="font-size:11px;font-weight:600;color:#059669;margin-bottom:3px;">Selesai</div>
+            <div style="font-size:11px;font-weight:600;color:#059669;margin-bottom:3px;">Kunjungan Selesai</div>
             <div style="font-size:24px;font-weight:800;color:#0F6E56;">{{ $totalDone }}</div>
         </div>
     </div>
@@ -143,24 +148,38 @@
             <a href="{{ route('patient.queues.index') }}" style="font-size:12px;color:#0F6E56;font-weight:600;text-decoration:none;">Lihat Semua →</a>
         </div>
         @forelse($recentQueues as $q)
-            @php $colors=['waiting'=>'#FFFBEB:#92400E','called'=>'#EFF6FF:#1E40AF','in_progress'=>'#F5F3FF:#5B21B6','done'=>'#ECFDF5:#065F46','cancelled'=>'#FEF2F2:#991B1B']; [$qbg,$qfg]=explode(':',$colors[$q->status]??'#F1F5F9:#475569'); @endphp
+            @php
+                $colors=['waiting'=>'#FFFBEB:#92400E','called'=>'#EFF6FF:#1E40AF','in_progress'=>'#F5F3FF:#5B21B6','done'=>'#ECFDF5:#065F46','cancelled'=>'#FEF2F2:#991B1B'];
+                [$qbg,$qfg]=explode(':',$colors[$q->status]??'#F1F5F9:#475569');
+            @endphp
             <div style="padding:11px 16px;border-bottom:1px solid #F8FAFC;display:flex;align-items:center;gap:10px;">
-                <div style="width:36px;height:36px;border-radius:9px;background:#ECFDF5;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#0F6E56;flex-shrink:0;">{{ $q->queue_number }}</div>
-                <div style="flex:1;min-width:0;">
-                    <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ optional(optional(optional($q->schedule)->doctor)->user)->name ?? '—' }}</div>
-                    <div style="font-size:11px;color:#94A3B8;">{{ optional(optional(optional($q->schedule)->doctor)->clinic)->name ?? '—' }} · {{ $q->booking_date->format('d/m/Y') }}</div>
+                <div style="width:38px;height:38px;border-radius:9px;background:#ECFDF5;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#0F6E56;flex-shrink:0;text-align:center;line-height:1.2;">
+                    {{ $q->queue_number }}
                 </div>
-                <span style="padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;background:{{ $qbg }};color:{{ $qfg }};white-space:nowrap;">{{ $q->status_label }}</span>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                        {{ optional(optional(optional($q->schedule)->doctor)->user)->name ?? '—' }}
+                    </div>
+                    <div style="font-size:11px;color:#94A3B8;">
+                        {{ optional(optional(optional($q->schedule)->doctor)->clinic)->name ?? '—' }}
+                        · {{ $q->booking_date->format('d/m/Y') }}
+                    </div>
+                </div>
+                <span style="padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;background:{{ $qbg }};color:{{ $qfg }};white-space:nowrap;">
+                    {{ $q->status_label }}
+                </span>
             </div>
         @empty
-            <div style="text-align:center;padding:24px;color:#94A3B8;font-size:13px;">Belum ada riwayat</div>
+            <div style="text-align:center;padding:24px;color:#94A3B8;font-size:13px;">
+                Belum ada riwayat antrian
+            </div>
         @endforelse
     </div>
 
-    {{-- Poll setiap 15 detik jika masih waiting --}}
+    {{-- Auto-poll jika masih waiting --}}
     @if($activeQueue && $activeQueue->status === 'waiting')
         <script>
-        setInterval(()=>{
+        setInterval(function(){
             fetch(location.href,{headers:{'X-Requested-With':'XMLHttpRequest'}})
             .then(r=>r.text())
             .then(h=>{

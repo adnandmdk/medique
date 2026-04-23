@@ -1,9 +1,10 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\DB;   // ✅ import DB facade
 use Illuminate\Support\Str;
 
 class Queue extends Model
@@ -36,10 +37,25 @@ class Queue extends Model
         'cancelled'   => 'badge-cancelled',
     ];
 
-    public function hospital() { return $this->belongsTo(Hospital::class); }
-    public function patient()  { return $this->belongsTo(User::class, 'patient_id'); }
-    public function schedule() { return $this->belongsTo(Schedule::class); }
-    public function logs()     { return $this->hasMany(QueueLog::class); }
+    public function hospital()
+    {
+        return $this->belongsTo(Hospital::class);
+    }
+
+    public function patient()
+    {
+        return $this->belongsTo(User::class, 'patient_id');
+    }
+
+    public function schedule()
+    {
+        return $this->belongsTo(Schedule::class);
+    }
+
+    public function logs()
+    {
+        return $this->hasMany(QueueLog::class);
+    }
 
     public function getStatusLabelAttribute(): string
     {
@@ -56,24 +72,25 @@ class Queue extends Model
         do {
             $token = strtoupper(Str::random(8));
         } while (self::where('token', $token)->exists());
+
         return $token;
     }
 
     /**
      * Generate nomor antrian format: PU-0001
-     * Gunakan DB transaction + atomic untuk avoid race condition
+     * ✅ FIXED: Gunakan DB:: facade setelah di-import
      */
     public static function generateQueueNumber(int $scheduleId, string $bookingDate): string
     {
         $schedule = Schedule::with('doctor.clinic')->findOrFail($scheduleId);
         $clinic   = optional(optional($schedule->doctor)->clinic);
         $poliCode = $clinic->poli_code ?? 'XX';
+        $clinicId = $clinic->id ?? 0;
 
-        // Atomic: gunakan DB transaction untuk menghindari race condition
-        return DB::transaction(function () use ($scheduleId, $bookingDate, $poliCode, $clinic) {
-            // Lock row untuk counting
+        // ✅ DB:: sudah di-import, tidak perlu backslash
+        return DB::transaction(function () use ($bookingDate, $poliCode, $clinicId) {
             $count = self::whereHas('schedule.doctor', fn($q) =>
-                        $q->where('clinic_id', $clinic->id ?? 0)
+                        $q->where('clinic_id', $clinicId)
                     )
                     ->where('booking_date', $bookingDate)
                     ->whereNotIn('status', ['cancelled'])

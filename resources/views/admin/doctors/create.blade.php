@@ -1,12 +1,12 @@
 {{-- resources/views/admin/doctors/create.blade.php --}}
 <x-app-layout title="Tambah Dokter">
     <x-slot name="header"><div class="topbar-title">Tambah Dokter</div></x-slot>
-    <x-slot name="actions"><a href="{{ route('admin.doctors.index') }}" class="btn btn-secondary btn-sm">← Kembali</a></x-slot>
+    <x-slot name="actions"><a href="{{ route('admin.hospitals.doctors.index', $hospital->id) }}" class="btn btn-secondary btn-sm">← Kembali</a></x-slot>
     <div class="form-wrap">
         <div class="form-section">
             <div class="form-section-title">Data Dokter Baru</div>
             <div class="form-section-sub">Hubungkan akun user dengan profil dokter</div>
-            <form action="{{ route('admin.doctors.store') }}" method="POST">
+            <form action="{{ route('admin.hospitals.doctors.store', $hospital->id) }}" method="POST">
                 @csrf
                 <div class="form-group">
                     <label class="form-label">Akun User (Role: Doctor) <span class="req">*</span></label>
@@ -48,7 +48,7 @@
                 </div>
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary">Simpan Dokter</button>
-                    <a href="{{ route('admin.doctors.index') }}" class="btn btn-secondary">Batal</a>
+                    <a href="{{ route('admin.hospitals.doctors.index', $hospital->id) }}" class="btn btn-secondary">Batal</a>
                 </div>
             </form>
         </div>

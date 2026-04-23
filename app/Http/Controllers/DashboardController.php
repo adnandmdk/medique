@@ -1,21 +1,24 @@
 <?php
+
 namespace App\Http\Controllers;
 
-use App\Models\Clinic;
-use App\Models\Doctor;
 use App\Models\Hospital;
 use App\Models\Queue;
-use App\Models\User;
+use App\Services\DashboardService;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        private readonly DashboardService $dashboardService
+    ) {}
+
     public function index(Request $request)
     {
         $user = $request->user();
 
         if (! $user || $user->roles->isEmpty()) {
-            abort(403);
+            abort(403, 'Akun belum memiliki role.');
         }
 
         return match(true) {
@@ -30,26 +33,30 @@ class DashboardController extends Controller
     {
         $hospitalId = $user->isSuperAdmin() ? null : $user->hospital_id;
 
-        $query = Hospital::query();
-        if ($hospitalId) $query->where('id', $hospitalId);
+        $hospitalsQuery = Hospital::query();
+        if ($hospitalId) $hospitalsQuery->where('id', $hospitalId);
 
-        $hospitals = $query->withCount([
+        $hospitals = $hospitalsQuery->withCount([
             'clinics',
             'doctors',
-            'queues as today_queues' => fn($q) => $q->where('booking_date', today()),
+            'queues as today_queues' => fn($q) =>
+                $q->where('booking_date', today()),
         ])->get();
 
-        // Global stats
-        $stats = [
-            'total_hospitals' => $hospitals->count(),
-            'total_doctors'   => Doctor::when($hospitalId, fn($q) => $q->where('hospital_id', $hospitalId))->count(),
-            'total_patients'  => User::role('patient')->when($hospitalId, fn($q) => $q->where('hospital_id', $hospitalId))->count(),
-            'today_queues'    => Queue::when($hospitalId, fn($q) => $q->where('hospital_id', $hospitalId))->where('booking_date', today())->count(),
-            'waiting_queues'  => Queue::when($hospitalId, fn($q) => $q->where('hospital_id', $hospitalId))->where('status', 'waiting')->count(),
-            'recent_queues'   => Queue::with(['patient','schedule.doctor.user','schedule.doctor.clinic','hospital'])
-                                    ->when($hospitalId, fn($q) => $q->where('hospital_id', $hospitalId))
+        $stats = $hospitalId
+            ? $this->dashboardService->getAdminStats($hospitalId)
+            : [
+                'total_clinics'  => 0,
+                'active_clinics' => 0,
+                'total_doctors'  => 0,
+                'total_patients' => 0,
+                'today_queues'   => Queue::where('booking_date', today())->count(),
+                'waiting_queues' => Queue::where('status', 'waiting')->count(),
+                'done_queues'    => 0,
+                'total_queues'   => Queue::count(),
+                'recent_queues'  => Queue::with(['patient','schedule.doctor.user','schedule.doctor.clinic'])
                                     ->latest()->take(5)->get(),
-        ];
+            ];
 
         return view('dashboard.admin', compact('stats', 'hospitals'));
     }
@@ -57,41 +64,26 @@ class DashboardController extends Controller
     private function doctorDash($user)
     {
         $doctor = $user->doctor;
-        if (! $doctor) return view('dashboard.doctor', ['stats' => null]);
+        if (! $doctor) {
+            return view('dashboard.doctor', ['stats' => null]);
+        }
 
-        $hospitalId = $doctor->hospital_id;
-        $tq = Queue::whereHas('schedule', fn($q) => $q->where('doctor_id', $doctor->id))
-                   ->where('booking_date', today());
-
-        $stats = [
-            'today_total'       => (clone $tq)->count(),
-            'today_waiting'     => (clone $tq)->where('status','waiting')->count(),
-            'today_in_progress' => (clone $tq)->where('status','in_progress')->count(),
-            'today_done'        => (clone $tq)->where('status','done')->count(),
-            'next_queue'        => (clone $tq)->whereIn('status',['waiting','called'])->orderBy('queue_number')->with('patient')->first(),
-            'queue_list'        => (clone $tq)->orderBy('queue_number')->with('patient')->get(),
-            'hospital'          => $doctor->hospital,
-            'clinic'            => $doctor->clinic,
-        ];
+        $stats = $this->dashboardService->getDoctorStats($doctor->id);
+        $stats['hospital'] = $doctor->hospital;
+        $stats['clinic']   = $doctor->clinic;
 
         return view('dashboard.doctor', compact('stats'));
     }
 
     private function patientDash($user)
     {
-        $activeQueue = Queue::with(['schedule.doctor.user','schedule.doctor.clinic','hospital','logs'])
-            ->where('patient_id', $user->id)
-            ->whereIn('status', ['waiting','called','in_progress'])
-            ->latest()->first();
+        $patientStats = $this->dashboardService->getPatientStats($user->id);
 
-        $recentQueues = Queue::with(['schedule.doctor.user','schedule.doctor.clinic','hospital'])
-            ->where('patient_id', $user->id)
-            ->latest()->take(5)->get();
+        $activeQueue   = $patientStats['active_queue'];
+        $recentQueues  = $patientStats['recent_queues'];
+        $totalBookings = $patientStats['total_bookings'];
+        $totalDone     = $patientStats['total_done'];
 
-        $totalBookings = Queue::where('patient_id', $user->id)->count();
-        $totalDone     = Queue::where('patient_id', $user->id)->where('status','done')->count();
-
-        // Estimasi posisi
         $position = null;
         if ($activeQueue && $activeQueue->status === 'waiting') {
             $position = Queue::where('schedule_id', $activeQueue->schedule_id)
@@ -102,7 +94,8 @@ class DashboardController extends Controller
         }
 
         return view('dashboard.patient', compact(
-            'activeQueue', 'recentQueues', 'totalBookings', 'totalDone', 'position'
+            'activeQueue', 'recentQueues',
+            'totalBookings', 'totalDone', 'position'
         ));
     }
 }

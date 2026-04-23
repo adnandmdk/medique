@@ -10,15 +10,18 @@ return new class extends Migration
     {
         Schema::create('doctors', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('hospital_id')
+                  ->constrained('hospitals')->cascadeOnDelete();
             $table->foreignId('user_id')
-                  ->constrained('users')
-                  ->cascadeOnDelete();
+                  ->constrained('users')->cascadeOnDelete();
             $table->foreignId('clinic_id')
-                  ->constrained('clinics')
-                  ->cascadeOnDelete();
+                  ->constrained('clinics')->cascadeOnDelete();
             $table->string('specialization');
             $table->string('licence_number')->unique();
             $table->timestamps();
+
+            $table->index('hospital_id');
+            $table->index('clinic_id');
         });
     }
 

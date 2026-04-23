@@ -3,58 +3,103 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Schedule\StoreScheduleRequest;
-use App\Http\Requests\Schedule\UpdateScheduleRequest;
+use App\Models\Doctor;
+use App\Models\Hospital;
 use App\Models\Schedule;
-use App\Services\ScheduleService;
-use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ScheduleController extends Controller
 {
-    public function __construct(
-        private readonly ScheduleService $scheduleService
-    ) {}
-
-    public function index()
+    public function index(Hospital $hospital): View
     {
-    $schedules = Schedule::with(['doctor.user', 'clinic'])->paginate(10);
+        $schedules = Schedule::with(['doctor.user', 'doctor.clinic'])
+            ->whereHas('doctor', fn($q) =>
+                $q->where('hospital_id', $hospital->id)
+            )
+            ->paginate(15);
 
-    return view('admin.schedules.index', compact('schedules'));
+        return view('admin.schedules.index', compact('hospital', 'schedules'));
     }
 
-    public function create(): View
+    public function create(Hospital $hospital): View
     {
-        $doctors = $this->scheduleService->getAllDoctors();
-        $days    = Schedule::DAY_LABELS;
-        return view('admin.schedules.create', compact('doctors', 'days'));
+        $doctors = Doctor::with(['user', 'clinic'])
+            ->where('hospital_id', $hospital->id)
+            ->get();
+        $days = Schedule::DAY_LABELS;
+
+        return view('admin.schedules.create', compact('hospital', 'doctors', 'days'));
     }
 
-    public function store(StoreScheduleRequest $request): RedirectResponse
+    public function store(Request $request, Hospital $hospital)
     {
-        $this->scheduleService->store($request);
-        return redirect()->route('admin.schedules.index')
+        $doctorId = $request->doctor_id;
+
+        $request->validate([
+            'doctor_id'   => 'required|exists:doctors,id',
+            'day_of_week' => [
+                'required',
+                Rule::in(array_keys(Schedule::DAY_LABELS)),
+                Rule::unique('schedules')->where(fn($q) =>
+                    $q->where('doctor_id', $doctorId)
+                ),
+            ],
+            'start_time'  => 'required|date_format:H:i',
+            'end_time'    => 'required|date_format:H:i|after:start_time',
+        ], [
+            'day_of_week.unique' => 'Dokter sudah memiliki jadwal di hari tersebut.',
+            'end_time.after'     => 'Jam selesai harus setelah jam mulai.',
+        ]);
+
+        Schedule::create($request->only([
+            'doctor_id','day_of_week','start_time','end_time',
+        ]));
+
+        return redirect()->route('admin.hospitals.schedules.index', $hospital)
             ->with('success', 'Jadwal berhasil ditambahkan.');
     }
 
-    public function edit(Schedule $schedule): View
+    public function edit(Hospital $hospital, Schedule $schedule): View
     {
-        $doctors = $this->scheduleService->getAllDoctors();
-        $days    = Schedule::DAY_LABELS;
-        return view('admin.schedules.edit', compact('schedule', 'doctors', 'days'));
+        $doctors = Doctor::with(['user', 'clinic'])
+            ->where('hospital_id', $hospital->id)
+            ->get();
+        $days = Schedule::DAY_LABELS;
+
+        return view('admin.schedules.edit', compact('hospital', 'schedule', 'doctors', 'days'));
     }
 
-    public function update(UpdateScheduleRequest $request, Schedule $schedule): RedirectResponse
+    public function update(Request $request, Hospital $hospital, Schedule $schedule)
     {
-        $this->scheduleService->update($request, $schedule);
-        return redirect()->route('admin.schedules.index')
+        $doctorId = $request->doctor_id;
+
+        $request->validate([
+            'doctor_id'   => 'required|exists:doctors,id',
+            'day_of_week' => [
+                'required',
+                Rule::in(array_keys(Schedule::DAY_LABELS)),
+                Rule::unique('schedules')->where(fn($q) =>
+                    $q->where('doctor_id', $doctorId)
+                )->ignore($schedule->id),
+            ],
+            'start_time'  => 'required|date_format:H:i',
+            'end_time'    => 'required|date_format:H:i|after:start_time',
+        ]);
+
+        $schedule->update($request->only([
+            'doctor_id','day_of_week','start_time','end_time',
+        ]));
+
+        return redirect()->route('admin.hospitals.schedules.index', $hospital)
             ->with('success', 'Jadwal berhasil diperbarui.');
     }
 
-    public function destroy(Schedule $schedule): RedirectResponse
+    public function destroy(Hospital $hospital, Schedule $schedule)
     {
-        $this->scheduleService->destroy($schedule);
-        return redirect()->route('admin.schedules.index')
-            ->with('success', 'Jadwal berhasil dihapus.');
+        $schedule->delete();
+        return redirect()->route('admin.hospitals.schedules.index', $hospital)
+            ->with('success', 'Jadwal dihapus.');
     }
 }

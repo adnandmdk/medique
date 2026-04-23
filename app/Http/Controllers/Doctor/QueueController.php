@@ -17,52 +17,39 @@ class QueueController extends Controller
 
     public function index(Request $request): View
     {
-        $user = $request->user();
+        $doctor = $request->user()->doctor;
 
-        // 🔴 VALIDASI USER LOGIN
-        if (!$user) {
-            abort(403, 'Unauthorized');
+        if (! $doctor) {
+            return view('doctor.queues.index', ['queues' => collect(), 'doctor' => null]);
         }
 
-        // 🔴 VALIDASI ROLE DOCTOR (kalau pakai Spatie)
-        if (!$user->hasRole('doctor')) {
-            abort(403, 'Akun belum terdaftar sebagai dokter. Hubungi Admin.');
-        }
+        $queues = Queue::with(['patient', 'schedule'])
+            ->whereHas('schedule', fn($q) =>
+                $q->where('doctor_id', $doctor->id)
+            )
+            ->where('booking_date', today())
+            ->whereIn('status', ['waiting', 'called','in_progress'])
+            ->orderBy('queue_number')
+            ->paginate(20);
 
-        // 🔴 AMBIL DATA DOCTOR
-        $doctor = $user->doctor;
-
-        if (!$doctor) {
-            abort(403, 'Data dokter belum dibuat. Hubungi Admin.');
-        }
-
-        // 🔵 AMAN DIPAKAI
-        $queues = $this->queueService->getTodayByDoctor($doctor->id);
-
-        return view('doctor.queues.index', compact('queues'));
+        return view('doctor.queues.index', compact('queues', 'doctor'));
     }
 
     public function call(Queue $queue): RedirectResponse
     {
         $this->queueService->call($queue);
-
-        return redirect()->route('doctor.queues.index')
-            ->with('success', "Antrian #{$queue->queue_number} dipanggil.");
+        return back()->with('success', "Antrian #{$queue->queue_number} dipanggil.");
     }
 
     public function start(Queue $queue): RedirectResponse
     {
         $this->queueService->start($queue);
-
-        return redirect()->route('doctor.queues.index')
-            ->with('success', "Antrian #{$queue->queue_number} sedang dilayani.");
+        return back()->with('success', "Antrian #{$queue->queue_number} sedang dilayani.");
     }
 
     public function finish(Queue $queue): RedirectResponse
     {
         $this->queueService->finish($queue);
-
-        return redirect()->route('doctor.queues.index')
-            ->with('success', "Antrian #{$queue->queue_number} selesai.");
+        return back()->with('success', "Antrian #{$queue->queue_number} selesai.");
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -6,7 +7,6 @@ use App\Models\Clinic;
 use App\Models\Doctor;
 use App\Models\Hospital;
 use App\Models\Queue;
-use App\Models\Schedule;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -14,8 +14,11 @@ class HospitalController extends Controller
 {
     public function index(): View
     {
-        $hospitals = Hospital::withCount(['clinics','doctors','queues' => fn($q) =>
-            $q->where('booking_date', today())
+        $hospitals = Hospital::withCount([
+            'clinics',
+            'doctors',
+            'queues as today_queues' => fn($q) =>
+                $q->where('booking_date', today()),
         ])->get();
 
         return view('admin.hospitals.index', compact('hospitals'));
@@ -23,28 +26,32 @@ class HospitalController extends Controller
 
     public function show(Hospital $hospital): View
     {
-        $hospital->load([
-            'clinics' => fn($q) => $q->withCount('doctors'),
-        ]);
-
         $stats = [
-            'total_doctors'  => Doctor::where('hospital_id', $hospital->id)->count(),
             'total_clinics'  => Clinic::where('hospital_id', $hospital->id)->count(),
-            'today_queues'   => Queue::where('hospital_id', $hospital->id)->where('booking_date', today())->count(),
-            'waiting_queues' => Queue::where('hospital_id', $hospital->id)->where('status', 'waiting')->count(),
+            'total_doctors'  => Doctor::where('hospital_id', $hospital->id)->count(),
+            'today_queues'   => Queue::where('hospital_id', $hospital->id)
+                                    ->where('booking_date', today())->count(),
+            'waiting_queues' => Queue::where('hospital_id', $hospital->id)
+                                    ->where('status', 'waiting')->count(),
         ];
 
-        $doctors = Doctor::with(['user','clinic','schedules'])
+        $doctors = Doctor::with(['user', 'clinic', 'schedules'])
             ->where('hospital_id', $hospital->id)
             ->get();
 
-        $queues = Queue::with(['patient','schedule.doctor.user','schedule.doctor.clinic'])
-            ->where('hospital_id', $hospital->id)
-            ->where('booking_date', today())
-            ->orderBy('queue_number')
-            ->get();
+        $queues = Queue::with([
+            'patient',
+            'schedule.doctor.user',
+            'schedule.doctor.clinic',
+        ])
+        ->where('hospital_id', $hospital->id)
+        ->where('booking_date', today())
+        ->orderBy('queue_number')
+        ->get();
 
-        return view('admin.hospitals.show', compact('hospital','stats','doctors','queues'));
+        return view('admin.hospitals.show', compact(
+            'hospital', 'stats', 'doctors', 'queues'
+        ));
     }
 
     public function create(): View

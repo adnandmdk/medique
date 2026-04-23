@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -19,9 +20,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'hospital.scope' => \App\Http\Middleware\ValidateHospitalScope::class,
         ]);
 
+        // Apply EnsureHospitalAccess ke semua web routes
         $middleware->web(append: [
             \App\Http\Middleware\EnsureHospitalAccess::class,
         ]);
     })
-    ->withExceptions(function (Exceptions $exceptions) {})
-    ->create();
+    ->withExceptions(function (Exceptions $exceptions) {
+        //
+    })->create();

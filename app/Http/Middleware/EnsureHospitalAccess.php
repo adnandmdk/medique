@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Middleware;
 
 use Closure;
@@ -9,18 +10,23 @@ class EnsureHospitalAccess
 {
     public function handle(Request $request, Closure $next): Response
     {
-        // ✅ Gunakan $request->user() bukan auth()->user()
+        // ✅ FIXED: Gunakan $request->user() bukan auth()->user()
         $user = $request->user();
 
-        if (! $user) return $next($request);
+        if (! $user) {
+            return $next($request);
+        }
 
         // Super admin bisa akses semua
-        if ($user->isSuperAdmin()) return $next($request);
+        if ($user->isSuperAdmin()) {
+            return $next($request);
+        }
 
-        // Doctor: bind ke hospital dokternya
+        // Doctor: otomatis bind ke hospital dokternya
         if ($user->isDoctor() && $user->doctor) {
-            $request->merge(['_hospital_id' => $user->doctor->hospital_id]);
-            view()->share('currentHospitalId', $user->doctor->hospital_id);
+            $hospitalId = $user->doctor->hospital_id;
+            $request->merge(['_hospital_id' => $hospitalId]);
+            view()->share('currentHospitalId', $hospitalId);
             return $next($request);
         }
 

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Display Antrian — {{ optional($clinic)->name ?? 'Medique' }}</title>
+    <title>Display Antrian — {{ $clinic->name ?? 'Medique' }}</title>
     <style>
         :root {
             --brand: #0F6E56; --brand-light: #E1F5EE;
@@ -127,7 +127,7 @@
         <div class="tv-logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
         <div>
             <div class="tv-logo-name">Medi<span>que</span></div>
-            <div class="tv-clinic">{{ optional($clinic)->name ?? 'Semua Poliklinik' }}</div>
+            <div class="tv-clinic">{{ $clinic->name ?? 'Semua Poliklinik' }}</div>
         </div>
     </div>
     <div style="display:flex;align-items:center;gap:14px;">
@@ -135,7 +135,7 @@
             <select onchange="window.location='/display/'+this.value" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:5px 10px;border-radius:7px;font-size:12px;font-family:inherit;outline:none;cursor:pointer;">
                 <option value="">Semua</option>
                 @foreach($clinics as $c)
-                    <option value="{{ $c->id }}" {{ optional($clinic)->id===$c->id?'selected':'' }}>{{ $c->name }}</option>
+                    <option value="{{ $c->id }}" {{ $clinic->id===$c->id?'selected':'' }}>{{ $c->name }}</option>
                 @endforeach
             </select>
         @endif
@@ -153,12 +153,12 @@
     <div class="current-panel">
         <div class="now-label">🔔 Sedang Dipanggil</div>
 
-        @if($currentQueue)
+        @if(isset($currentQueue) && $currentQueue)
             @php
                 $calledLog = optional($currentQueue->logs->where('action','called')->last());
                 $calledTime = optional($calledLog)->timestamp;
             @endphp
-            <div class="now-num" id="tvNum">#{{ $currentQueue->queue_number }}</div>
+            <div class="now-num" id="tvNum" style="font-size:60px;">#{{ $currentQueue->queue_number }}</div>
             <div class="now-name" id="tvName">{{ optional($currentQueue->patient)->name ?? '—' }}</div>
 
             {{-- Meta: Ruangan, Dokter, Jam Dipanggil --}}
@@ -326,6 +326,7 @@ setInterval(()=>{
         });
     }).catch(()=>{});
 },20000);
+
 </script>
 </body>
 </html>
