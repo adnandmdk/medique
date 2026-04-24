@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\URL;
+use Spatie\Permission\Models\Role;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,9 +20,9 @@ class AppServiceProvider extends ServiceProvider
      * Bootstrap any application services.
      */
     public function boot(): void
-    {
-        if (config('app.env') === 'production') {
-        URL::forceScheme('https');
-    }
-    }
+{
+    Role::firstOrCreate(['name' => 'admin']);
+    Role::firstOrCreate(['name' => 'doctor']);
+    Role::firstOrCreate(['name' => 'patient']);
+}
 }

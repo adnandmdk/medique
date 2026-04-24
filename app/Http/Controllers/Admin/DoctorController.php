@@ -9,6 +9,7 @@ use App\Models\Hospital;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Spatie\Permission\Models\Role;
 
 class DoctorController extends Controller
 {
@@ -64,7 +65,11 @@ class DoctorController extends Controller
 
         $usedIds = Doctor::where('hospital_id', $hospital->id)
             ->where('id', '!=', $doctor->id)->pluck('user_id');
-        $users = User::role('doctor')->whereNotIn('id', $usedIds)->get();
+        $role = Role::where('name', 'doctor')->first();
+
+$users = $role
+    ? User::role('doctor')->whereNotIn('id', $usedIds)->get()
+    : collect(); // kosong kalau role belum ada
 
         return view('admin.doctors.edit', compact('hospital', 'doctor', 'clinics', 'users'));
     }
