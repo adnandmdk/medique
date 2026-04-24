@@ -156,15 +156,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
     
 });
-Route::get('/assign-role', function () {
-    $user = User::where('email', 'admin@medique.test')->first();
+Route::get('/setup-roles', function () {
 
     // buat role kalau belum ada
-    $role = Role::firstOrCreate(['name' => 'admin']);
+    $adminRole = Role::firstOrCreate(['name' => 'admin']);
+    $doctorRole = Role::firstOrCreate(['name' => 'doctor']);
+    $patientRole = Role::firstOrCreate(['name' => 'patient']);
 
-    // assign ke user
-    $user->assignRole($role);
+    // assign ke user tertentu (contoh)
+    $admin = User::where('email', 'admin@medique.test')->first();
+    if ($admin) $admin->assignRole($adminRole);
 
-    return 'Role assigned!';
+    $doctor = User::where('email', 'doctor@medique.test')->first();
+    if ($doctor) $doctor->assignRole($doctorRole);
+
+    $patient = User::where('email', 'patient@medique.test')->first();
+    if ($patient) $patient->assignRole($patientRole);
+
+    return 'Roles ready!';
 });
 require __DIR__.'/auth.php';
