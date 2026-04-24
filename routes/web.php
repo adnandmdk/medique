@@ -15,6 +15,7 @@ use App\Http\Controllers\Doctor\AttendanceController;
 use App\Http\Controllers\Patient\QueueController as PatientQueueController;
 use App\Http\Controllers\Auth\PatientRegisterController;
 use App\Models\User;
+use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Artisan;
 
@@ -55,6 +56,8 @@ Route::get('/display', [QueueDisplayController::class, 'index'])
 Route::get('/display/{clinic}', [QueueDisplayController::class, 'show'])
     ->name('queue.display.clinic');
 
+    Route::patch('/admin/queues/{queue}/cancel', [AdminQueueController::class, 'cancel'])
+    ->name('admin.queues.cancel');
 // ── AUTHENTICATED ──
 Route::middleware(['auth', 'verified'])->group(function () {
 
@@ -153,5 +156,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
     
 });
+Route::get('/assign-role', function () {
+    $user = User::where('email', 'admin@medique.test')->first();
 
+    // buat role kalau belum ada
+    $role = Role::firstOrCreate(['name' => 'admin']);
+
+    // assign ke user
+    $user->assignRole($role);
+
+    return 'Role assigned!';
+});
 require __DIR__.'/auth.php';

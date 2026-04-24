@@ -19,6 +19,10 @@ Route::get('/clinics/{clinic}',    [ClinicController::class, 'show']);
 Route::get('/schedules',           [ScheduleController::class, 'index']);
 Route::get('/schedules/{schedule}',[ScheduleController::class, 'show']);
 
+Route::get('/', function () {
+    return response()->json(['message' => 'API OK']);
+});
+
 // =============================================
 // AUTHENTICATED ROUTES
 // =============================================

@@ -42,7 +42,10 @@
                         <td><span class="badge {{ $sm[$queue->status] ?? '' }}">{{ $queue->status_label }}</span></td>
                         <td>
                             @if(!in_array($queue->status, ['done','cancelled']))
-                                <form action="{{ route('admin.queues.cancel', $queue) }}" method="POST" onsubmit="return confirm('Batalkan antrian?')">
+                                <form action="{{ route('admin.hospitals.queues.cancel', [
+    'hospital' => $queue->hospital_id,
+    'queue' => $queue->id
+]) }}" method="POST" onsubmit="return confirm('Batalkan antrian?')">
                                     @csrf @method('PATCH')
                                     <button type="submit" class="btn btn-danger btn-xs">Batalkan</button>
                                 </form>

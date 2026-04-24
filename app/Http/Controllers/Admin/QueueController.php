@@ -36,9 +36,14 @@ class QueueController extends Controller
         return view('admin.queues.index', compact('hospital', 'queues', 'stats'));
     }
 
-    public function cancel(Hospital $hospital, Queue $queue)
-    {
-        $this->queueService->cancel($queue);
-        return back()->with('success', 'Antrian dibatalkan.');
+   public function cancel(\App\Models\Queue $queue)
+{
+    if (!in_array($queue->status, ['done', 'cancelled'])) {
+        $queue->update([
+            'status' => 'cancelled'
+        ]);
     }
+
+    return back()->with('success', 'Antrian berhasil dibatalkan');
+}
 }
